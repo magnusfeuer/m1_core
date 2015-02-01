@@ -1,0 +1,10 @@
+{application, epic,
+ [{description, "EPIC"},
+  {vsn, "%VSN%"},
+  {modules, [epic_drv, epic_app, epic_sup, 
+  	     epic, ebackend, ewin]},
+  {registered, [epic_serv]},
+  {mod,{epic_app,[]}},
+  {env, []},
+  {applications,[kernel,stdlib]}
+  ]}.

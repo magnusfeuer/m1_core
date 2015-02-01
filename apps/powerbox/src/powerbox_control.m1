@@ -1,0 +1,270 @@
+//
+//
+application PowerBoxControl {
+Screen s;
+EpicInputDevice touch;
+InputStrategy input_strategy;
+Timer poll_timer;
+event time poll_t;
+int cwidth  = 80;
+int cheight = 350;
+int gheight = 400;
+int fheight = 50;
+int cspace  = 3;
+
+Style style1 = @Style { name = "hstyle", fontName = "BankGothic Md BT",
+			fontSize  = 14, fontWeight = medium,
+			fontSlant = roman, fontColor = 0xffffff,
+			fontColor = 0x0000FF };
+
+Style style2 = @Style { name = "cstyle", fontName = "BankGothic Md BT",
+		       fontSize  = 12, fontWeight = medium,
+		       fontSlant = roman, fontColor = 0xffffff,
+		       fontColor = 0x0000FF };
+
+//
+// Channel 
+//   label
+//   veritcal slider
+//   an1 value V
+//
+
+
+type Channel : Layer {
+     public string headerClass = "hstyle";
+     public string an1Class = "cstyle";
+     public string headerText = "ABC";
+     public event  float an1;  // current 0 - 1 ( 0.00 - 3.30V )
+     public event  float pwm;  // pwm slider value 0 - 1 ( 0 - 200 )
+
+     private Text hLabel;
+     private :Slider:Vertical slider;
+     private Layer an1Gauge;
+
+     script Channel {
+     	 DDS   gauge_bg;
+     	 DDS   gauge_fg;
+     	 Float gauge_lb;
+	 ScalarInterpolator amp;
+
+	 hLabel = @String { top=0,
+			    class = headerClass,
+			    halign = center, 
+			    value = headerText,
+			    width <- width };
+
+	 gauge_bg = @DDS { ddsFile = "../images/3_1_1_3_1.dds",
+			   halign = center,
+			   width <- width
+	 };
+
+	 gauge_fg = @DDS { ddsFile = "../images/needle.dds",
+			   halign = center,
+			   width <- width,
+			   value <- an1,
+			   frameStart = 0.1,
+			   frameStop  = 0.8
+	 };
+	 // Calibration:
+	 //   AN1 = 84   == 1.0 AMP
+	 //   AN1 = 895  == 10.0 AMP
+	 amp = @ScalarInterpolator { key={ 0, 84/1023.0, 895/1023.0, 1.0},
+	       			     keyValue= { 0, 1.0, 10.0, 15.0 },
+				     fraction <- an1 },
+
+	 gauge_lb = @Float { top = 0,
+			     class = an1Class,
+			     halign = center,
+			     valign = center,
+			     width <- width,
+			     height <- (gauge_bg.contentHeight - 24),
+			     value <- amp.value,
+			     format = "%.1fA" 
+	 };
+
+	 an1Gauge = @Layer { top = 0,
+			     height <- gauge_bg.contentHeight,
+			     width  <- gauge_bg.contentWidth,
+			     children = { gauge_bg, gauge_fg, gauge_lb }
+	 };
+			     
+	 slider = @:Slider:Vertical { 
+	     big = false,
+	     halign = center,
+	     top <- hLabel.contentHeight + 5,
+	     height <- height - (hLabel.contentHeight + 
+				 gauge_bg.contentHeight ),
+	     width <- width
+	 };
+
+	 wantFocus = true;
+
+	 pwm <- slider.value;
+
+	 an1Gauge.top <- slider.top + slider.height;
+
+	 children = { hLabel, slider, an1Gauge };
+     }
+};
+
+type Frequency : Layer {
+    public event unsigned value;
+
+    private :Slider:Horizontal slider_khz;
+    private :Slider:Horizontal slider_hz;
+
+    script Frequency {
+	slider_khz = @:Slider:Horizontal { big = false,
+					   top = 0,
+					   height <- height / 2,
+					   width <- width };
+	slider_hz = @:Slider:Horizontal { big = false,
+					  top <- slider_khz.height,
+					  height <- height / 2,
+					  width <- width };
+	value <- @unsigned(slider_khz.value*20)*1000 +
+	    @unsigned(slider_hz.value*999);
+	wantFocus = true;
+	children = { slider_khz, slider_hz };
+    }
+};
+
+
+// pwm - channel 1
+Channel c1 = @Channel { headerText="PWM-1",
+			top=0, left=0, width=cwidth, height=cheight,
+			an1 = 0.0, pwm = 0.0 };
+
+// pwm - channel 2
+Channel c2 = @Channel { headerText="PWM-2",
+			top=0, left=cwidth, width=cwidth, height=cheight,
+			an1 = 0.0, pwm = 0.0 };
+
+// pwm - channel 3
+Channel c3 = @Channel { headerText="PWM-3",
+			top=0, left=2*cwidth, width=cwidth, height=cheight,
+			an1 = 0.0, pwm = 0.0 };
+
+Frequency f123 = @Frequency { top = cheight+10, left = 10, 
+			      width = 3*cwidth-20, height=fheight };
+
+// channel group 1 2 3
+Layer group123 = @Layer {
+    top = 30, left=cspace, width=3*cwidth, height=gheight,
+    style = @Style { backgroundColor = 0x666644 },
+    background = true,
+    wantFocus = true,	
+    children = { c1, c2, c3, f123}
+};
+
+
+// pwm - channel 4
+Channel c4 = @Channel { headerText="PWM-4",
+			top=0, left=0, width=cwidth, height=cheight,
+			an1=0.0, pwm = 0.0 };
+
+// pwm - channel 5
+Channel c5 = @Channel { headerText="PWM-5",
+			top=0, left=cwidth, width=cwidth, height=cheight,
+			an1=0.0, pwm = 0.0 };
+
+// pwm - channel 6
+Channel c6 = @Channel { headerText="PWM-6",
+			top=0, left=2*cwidth, width=cwidth, height=cheight,
+			an1=0.0, pwm = 0.0 };
+
+Frequency f456 = @Frequency { top = cheight+10, left = 10, 
+			      width = 3*cwidth-20, height=fheight };
+
+// channel group 4 5 6
+Layer group456 = @Layer {
+    top = 30, left=cspace+3*cwidth+cspace, width=3*cwidth, height=gheight,
+    style = @Style { backgroundColor = 0x777744 },
+    background = true,
+    wantFocus = true,
+    children = { c4, c5, c6, f456}
+};
+
+
+
+// pwm - channel 7
+Channel c7 = @Channel { headerText="PWM-7",
+			top=0, left=0, width=cwidth, height=cheight,
+			an1=0.0, pwm = 0.0 };
+
+// pwm - channel 8
+Channel c8 = @Channel { headerText="PWM-8",
+			top=0, left=cwidth, width=cwidth, height=cheight,
+			an1=0.0, pwm = 0.0 };
+
+// channel group 7 8
+Layer group78 = @Layer {
+    top = 30, left=3*cspace+6*cwidth, width=2*cwidth, height=gheight,
+    style = @Style { backgroundColor = 0x888844 },
+    background = true,
+    wantFocus = true,
+    children = { c7, c8}
+};
+
+script poll_t {
+    int i;
+    // printf("POLL\n");
+    foreach i in [1:8] {
+	.PowerBox.cget[i].an1 = 0.0;
+    }
+}
+
+s = @Screen { height = 480,
+	     width  = 640,
+	     pixelType = "bgra", // 32 bit LE mode working with ffmepg!!!
+	     backendType = "x11",
+	     framebufferDevice = "/dev/fb0",
+	     wantFocus = true,
+	     background = true,
+	     backgroundColor = 0xcccccc,
+	      children = {  group123, group456, group78 }
+};
+
+input_strategy = @InputStrategy { layer = s };
+
+.PowerBox.cset[1].pwm <- c1.pwm;
+.PowerBox.cset[2].pwm <- c2.pwm;
+.PowerBox.cset[3].pwm <- c3.pwm;
+.PowerBox.cset[4].pwm <- c4.pwm;
+.PowerBox.cset[5].pwm <- c5.pwm;
+.PowerBox.cset[6].pwm <- c6.pwm;
+.PowerBox.cset[7].pwm <- c7.pwm;
+.PowerBox.cset[8].pwm <- c8.pwm;
+
+.PowerBox.cset[1].frequency <- f123.value;
+.PowerBox.cset[4].frequency <- f456.value;
+
+
+poll_timer = @Timer { cycleInterval = 2, loop = true };
+
+poll_t <- poll_timer.cycleTime;
+
+c1.an1 <- .PowerBox.cin[1].an1;
+c2.an1 <- .PowerBox.cin[2].an1;
+c3.an1 <- .PowerBox.cin[3].an1;
+c4.an1 <- .PowerBox.cin[4].an1;
+c5.an1 <- .PowerBox.cin[5].an1;
+c6.an1 <- .PowerBox.cin[6].an1;
+c7.an1 <- .PowerBox.cin[7].an1;
+c8.an1 <- .PowerBox.cin[8].an1;
+
+
+
+touch = EpicInputDevice {
+	    inputStrategy = input_strategy,
+	    screen = s, // Used to extract mouse
+	    maxUnscaledX = 640,
+	    maxUnscaledY = 480,
+	    minUnscaledX = 0,
+	    minUnscaledY = 0,
+	    scaledWidth = 640,
+	    scaledHeight = 480
+};
+
+
+}

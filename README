@@ -1,0 +1,101 @@
+
+HOWTO 
+
+  The m1 is started trough the m1e (or m1e.debug) executable.
+  Currently the m1e takes following options:
+
+	  -L <lib-path>
+
+		Add (append) a library path
+
+	  -F <font-path>
+		Add (append) a font path.
+
+	  -d
+		Turn on debugging output same as -DI
+
+	  -D[ELPIW]
+		A	debug everything
+		I	informational output
+		M	memory debugging
+		L	lint debug
+		C	compile debug
+		E	eval debug
+		P	print terms for both eval and lint
+		W	warning output
+		T	type checker
+
+
+
+  After one or more m1 files may be given.
+
+ENVIRONMENT
+
+  M1_FONT_PATH
+
+	A colon separated path list where efnt files may be found.
+
+  M1_LIB_PATH
+
+	A colon separated path list where plugins are located.
+
+  M1_APEX_DEVICE
+
+	The device name used by apex_engine library. If this is not
+	present then it defaults to "/dev/ttyUSB0".
+
+  M1_BACKEND
+
+	The graphical backend engine to use for screens.
+	if unset it defaults to "x11".
+
+M1 Runtime errors
+
+   during debug set a break point at m1BreakHere to capture runtime
+   bugs.
+
+   during execution the error is printed and current script exection
+   is aborted, but the execution will continue.
+
+   Current errors:
+
+   	   "nil array access exception"
+
+	   	arrary[n]    when array = nil
+
+	   "array index exception"
+
+	   	array[n]     when n < 0 or n >= sizeof(array)
+	
+	   "nil symbol exception"
+
+	   	symbol was not defined (internal bug).
+
+	   "nil access exception"
+
+	   	when target object for assignment is nil
+
+	  "nil scope exception"
+
+	        when scope object is not present (internal bug).
+
+	  "nil field access exception"
+
+	       Trying to access a filed on nil object.
+
+	  "nil field exception"
+	  
+		Object field can not be resolved (internal)
+
+	  "object has bad pool index"
+
+	  	Objects "zero pool" index is corrupt (internal)
+
+	  "deleteThis on live object"
+
+	  	Trying to delete a referenced object (internal)
+
+          "releaseThis on zero object"
+
+	  	Trying to release a deleted object (internal)
+

@@ -1,0 +1,37 @@
+DEMO SYSTEM:
+keys/dmmo.h 
+Has public demo key encryupted with password 'DEMO'. This password is usually the IDE disk ident string.
+Same data exists under keys/demo.bin
+
+m1 content is then encrypted with the private demo key stored in: keys/demo.key
+
+m1e.debug retrieves IDE ident string and uses that as password to unlock demo public key compiled into system.
+Unlocked demo public key is then used to decrypt m1-files.
+
+The demo key is replaced with a device specific key upon production using patchkey.
+This device key is generated with key_tool. 
+The private/public part of the keys is checked into the database for future reference.
+
+To generate a device specific m1e binary.
+patchkey  m1e device-key.pub DOM-serial(passwd) keys/demo.bin(Existing compiled in public key to replace in binary)
+
+To generate device specific content:
+signtool using device private key.
+
+
+To generate magden generic content executable on all devices.
+When installing m1 code.
+Sign global magden.pub key with device.bin(private) key.
+The device signed magden.pub key is installed in a m1 unit directory specified by m1e -K [keypath]
+
+If OSS - sign m1 file with magden private key, using signtool.
+If closed source - encrypt magden private key, using signtool.
+
+To encrypt an m1 file with the demo key compiled into m1e
+ ~/m1/jway/bin/signtool encrypt -K ~/m1/jway/m1/core/trunk/keys/ -c 1 -s demo -o tst.m1e tst.m1
+
+To generate a new device specific key 
+~/m1/jway/bin/keytool -name s[m1_serial] -b -u any
+
+
+-----

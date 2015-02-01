@@ -1,0 +1,721 @@
+
+0. Introduction
+
+M1 support two kinds of files library or file. The only difference is
+how the declaration begins. For library the file will start:
+
+library <TypeName> [<version>] {
+	<declarations>
+	<scripts>
+	<statements>
+}
+
+otherwise the structure is just 
+
+<declarations>
+<scripts>
+<statements>
+
+The interpretation is something like
+
+type _File {
+     <declarations>
+     <scripts>
+     <statements>
+};
+
+it's like defining a unnamed type.
+
+The runtime system will after defining either the file or library
+create ONE object for the defined type. In the case of a library
+this object is retained in the system as an accessible type. In the
+case of a file the object is not retained and may be used for
+configuring and starting the system.
+
+
+1. Basic types
+
+M1 supports a few basic types which includes:
+
+bool, unsigned char, char, int, unsigned int and float. The syntax
+for constants generally follows that of C/C++ and the auto casting
+rules should also hold.
+You can also use the types:
+    byte     =  unsigned char
+    time     =  unsigned int
+    signed   =  signed int
+    unsigned =  unsigned int
+
+
+2. Enumerated types
+
+There is also support for enumerated
+values like:
+
+       enum Fruit { apple, orange, banana };
+
+It's a bit more limited than C/C++ in that it can only be used
+together with fields of that type.
+
+
+3. Constructed types
+
+3.0 type and libraries
+To add a new type then the type construct is used:
+
+   type Base {
+        int   a;
+	unsigned int b;
+	float    c;
+   };
+
+The base type can also be derived by:
+
+    type Derived : Base {
+    	 int    a;
+	 float  d;
+    };
+
+The type name MUST start with a upper case alpha [A-Z]. And field names
+MUST start with a lower case alpha [a-z].
+
+To use a type before it's define or if it is a external type then
+the interface must be used.
+
+    interface type Name {
+    	     ([public] declaration)*
+    }
+
+    interface library Name <version> {
+    	     ([public] declaration)*
+    }
+    	 
+
+3.1 Constructor and Destructor
+
+The type (or library) may declare a construktor and a destrutor like:
+
+    type Base {
+
+    	 script Base {  printf("I am born under punshes\n"); }
+
+	 script ~Base { printf("I am dead man\n"); }
+
+    }
+
+There is also an implicit constructor part. This is the code following
+declarations and scripts. This code will be run after the explictit 
+constructor. Since the File scope do not have a name it is a nice 
+feature since it allows file to initialize without refering to names.
+
+Constructors are run from base type to derived types. Destructors are
+run the other direction from derived type upto the base.
+
+3.2  Arrays
+
+An array is declared as
+
+       MyType foo[10];
+
+This will declare an array of 10 object referrences to objects of type
+MyType. To declare an array that will vary in size you use:
+
+	MyType foo[];
+  
+An element can then be acces throgh an index operator [] wher
+foo[0] is the first element and so on. To extract a sub array
+then the extended index operator is used: foo[0:5] will return 
+a sub array containing the first 6 element from foo. Some nice
+features of sub array indexing:
+
+	 foo[1:5] + foo[0]	// {foo[1],...,foo[5],foo[0]} rotate left
+
+	 foo[5:0]   		// {foo[5],...,foo[0]} reverse 
+
+	 foo[0:10:2]		// {foo[0],foo[2],...,foo[10]}
+
+FIXME: sub indexing is only possible on RHS but will possible on LHS as well
+
+       foo[0:10:2]  = bar[5:1]
+       
+		would mean
+		      foo[0] = bar[5],
+		      foo[2] = bar[4];
+		      foo[4] = bar[3];
+		      foo[6] = bar[2];
+		      foo[8] = bar[1];
+		      foo[10] = bar[0];
+
+It will merge a reverse bar into foo on even indices.
+
+
+4. Expressions
+
+Since in M1 every thing is an object all "variables" are fields of 
+something (e.g file/library/object). This means that in the expression:
+
+	  x = 1;
+
+x must be a field name in some object (also for local scopes).
+The expression syntax follow that of C/C++ with the some important exceptions.
+
+4.1 Assignment operators
+
+The following operators may be used for assigning values to fields.
+
+    	  =, *=, /=, %=, +=, -=, <<=, >>=, &=, |=, ^=, ++ and --
+
+They follow the same rules as in C/C++.
+
+4.2 Arithmetic operators
+
+    	  +, -, *, /, %
+
+4.3 Relational operators
+
+    	  <, <=, >, >=, ==, !=
+
+4.4 Bitwise operators
+
+    	  &, |, ^, << and >>
+
+4.5 Logical operators
+
+    	 &&, ||, !
+
+
+4.6 Deep vs. shallow assignment and compare.
+:=    Performs an object (shallow) copy. The content of the RHS is copied to 
+      the LHS. In the case LHS is nil LHS is created.
+
+=     Performs a reference copy. The RHS will refer to the same object as LHS.
+
+=:=   Does an object compare to see if the content of the two objects are equal.
+
+==    Does a reference compare to see if the two variables refer to the same
+      object.
+
+=!=   Does an object compare to see if the content of the two objects are different.
+
+!=    Does a reference compare to see if the two variables refer to different
+      objects.
+
+Note. To get a deep copy of an object the builtin copy must be used.
+There is alos a clone function that works much like := in the case where 
+LHS is nil.
+
+
+5.  Statements
+
+5.1.	if statement
+
+	if (expr) statement [else statement]
+
+5.2	switch statement
+
+	switch (expr) {
+	       declarations*
+	       statement*
+	}
+
+
+5.3	foreach statement
+
+	(DEPRECATED syntax use [start:stop:step] )
+	foreach var in <expr> .. <expr> [ step <expr> ] { 
+		declarations*
+		statements*
+	}
+	
+	(This will replace it)
+	foreach var in '[' <expr> ':' <expr> [':' <expr> ] ']' { 
+		declarations*
+		statements*
+	}
+
+	foreach var in <expr> { 
+		declarations*
+		statements*
+	}
+
+	loop over arrays, includin sub array indexing.
+
+5.4	compound statements
+
+	{
+	   declarations*
+	   statements
+	}
+
+5.6	connection statment
+
+	target <- source
+
+	Connects target event with source event, target event will automatically
+	be updated when source is updated.
+
+	target <- nil
+
+	Can be used to "disconnect" a connection.
+
+	The target and source must be of the same type and source must
+	be of output event type and target must be of input event type
+	(declaring "event float foo" means that foo can be connected
+	both ways.
+
+
+6. Events & scripts
+
+A fundamental concept in M1 is the event. The event is much like
+a connector in circuit. You declare a field as an event field like:
+
+  	    event signed x;
+
+When a field has been declaraed as an event field, that field may be
+used to connect to other fields. Values may be access and assigned as
+normal fields. To connect a event field with an other event field
+the operator <- is used.
+
+    event signed x;
+    event signed y;
+
+    x <- y;
+
+This means that whatever value that is assigned to y will also
+be present in x (in the next cycle)
+
+Below is an example where event field are used to build a trivial adder:
+
+   type MyAdder {
+   	input event float a;
+   	input event float b;
+
+	output event float result;
+
+
+	script {  result = a + b; }
+   };
+
+This example show that we define two input events a and b, and 
+if any of the event values are changed the script is executed and
+a result is feed to the result event field.
+
+  type MyExpr {
+       input event float x;
+       input event float y;
+
+       output event float result;
+
+       private MyAdder a 
+       private MyAdder b;
+
+       // construction code
+       a = MyAdder { a <- x, b <- y };
+       b = MyAdder { a <- a.result, b <- x };
+       result <- b.result
+   }
+
+This example show how to aggregate instances to a new type,
+(Calculateing the expression  (x+y)+x  ). The new type use events
+both as connection points but also as an interface. The keyword
+private can be used to hide internal and implementation specific
+parts of the type.
+
+The source to connect may also be an expression of events inputs and
+field values. like
+
+      x <- (y + 1)*z + a;
+
+Where y and z are event outputs and a is regular field in the current 
+context.
+
+This is transformed (internally) into the following code:
+
+     type %Tx0 {
+     	  float _p0;
+     	  input event float _i0;
+     	  input event float _i1;
+	  output event float _out;
+
+	  script {
+	  	 _out = (_i0 + 1)*_i1 + _p0;
+	  }
+
+	  script %Tx0 {
+	  	 _out = (_i0 + 1)*_i1 + _p0;
+	  }
+     }
+
+     x <- @%Tx0 { _i0 <- x, _i1 <- z, _p0 = a }._out;
+
+
+6.1 script triggers
+
+A trigger expression is used to activate a script when a condition occurrs.
+
+  script a || b when a < b {  result = 1 };
+
+This script will run when either input event a or b are updated and
+also a is less than b. If this condition is false the next script
+is tested. All scripts are tested and executed if conditions are true.
+
+The script syntax is:
+
+    script [event-trigger-expression] [when expression] { body }
+
+The event tigger expression is a boolean expression where the
+identifiers must be of input event types. All input events
+must belong to the current object. Trigger expression can not
+access an other objects inputs, but the when expression can.
+
+As mention above there are to special script then constructor and
+the destructot that triggers on construction and destruction of the
+object.
+
+    script <type-id> { body }
+
+    script ~<type-id> { bode }
+
+
+6.2 script executions
+
+The script are executed from derived typs and towards the base type
+scripts. A derived type may script a base types event varaibele to 
+take action. Of course a base type do not know of a derived types
+input events and can not script thoose. This means that if the
+derived type execute on a base types event field the derived type
+can also updated base type field that will be examined in the base type
+when executing the base type scripts.
+
+     type Base {
+     	  event signed x;
+     	  event signed y;
+
+	  script x {  printf("Base:x %d\n", x); }
+	  script y {  printf("Base:y %d\n", y); }
+     };
+
+     type Derived : Base {
+     	  event signed z;
+	  	 
+	  script x { y = 10; printf("Derived:x %d\n", x); }
+	  script z { printf("Derived:z %d\n", z); }
+     };
+
+     Derived a = @Derived {};
+     a.x = 17;
+
+
+     will? print
+
+     	   Derived:x 17
+     	   Base:x 17
+     	   Base:y 10
+
+
+
+99: Builtin types
+
+Layer
+Timer
+Timeout
+Screen
+Shape
+Text 
+Image
+Video
+DDS
+ScalarInterpolator
+PositionInterpolator
+ColorInterpolator
+
+
+100: Builtin functions
+
+    SYSTEM functions
+
+	float now()
+
+		Return number of seconds since system start
+
+	unsigned inow()
+	
+		Return number of milliseconds since system start
+
+	unsigned cycle()
+
+		 Return number of cycles since system start
+
+	unsigned random()
+
+		 Return a random number in range 0..2^31-1
+
+	float randomf()
+	
+		Return a random number in range 0..1
+
+	string getenv(string name)
+
+	       Return environment value for name.
+
+	unsigned reboot(void)
+
+	       Reboot the machine
+
+	unsigned reload_m1(string file, ...)
+
+	       Load m1 file
+
+	unsigned reload_lib(string sofile, ...)
+
+	       Load library file (plugin)
+
+    MATH functions
+
+	float abs(float x)
+
+	       Absolute value of a floating point number
+
+	signed abs(signed x)
+
+	       Absolute value of a signed number
+
+	signed sign(float x)
+
+	       Return the size of x (-1, 0 or 1)
+
+	signed sign(signed x)
+
+	       Return the size of x (-1, 0 or 1)
+
+	float trunc(float x)
+	
+	      Truncate the fraction part of a floating point value
+
+	float round(float x)
+
+	      Nearest integral value
+
+	float ceil(float x)
+
+	      Smallest integral value greater than or equal to x.
+
+	float floor(float x)
+
+	      Smallest integral value less than or equal to x.
+
+	float sin(float rad)
+
+	      Sine of x, measured in radians.	
+
+	float cos(float rad)
+
+	      Cosine of x, measured in radians.	
+
+	float pi()
+
+	      The constant value pi.
+
+	float sqrt(float x)
+
+	      Return square root of a number
+
+	float dist(float x, float y)
+
+	      Calculate the "distance" beteen x and y. This is 
+	      the function sqrt(x*x + y*y) The length of the hypotenuse in
+	      a right triangle. In the 2D/3D case this can be used
+	      to calculate the distance between points as 
+	      dist(X1-X0, Y1-Y0).
+
+
+    ARRAY functions
+		      
+ 	unsigned int size(T a[])
+
+		 Return the size of an array, 
+		 Note: 'vector' cannot be a string. (YET?)
+
+	void rotate(T a[], int shift)
+
+	     	 Rotate the array elements to the right or left
+		 depending on shift argument.
+		 If shift is less than zero then the elements are
+		 rotated backwards e.g the element a[1] will be located
+		 at a[0] while a[0] will be found at a[size(a)-1]
+		 A positive shift will rotate the other way around, while
+		 a shift of zero will leave it untouned.
+	
+	void reverse(T a[])
+
+		Reverse the elementes in the array.
+
+	void sort(T a[])
+
+		Sort the array elements in ascending order.
+
+	void sort(T a[], signed field)
+
+		Sort the array elements on specific field index
+
+   STRING functions
+
+        unsigned printf(string fmt, ...)
+
+		 Formatted output on stdout. Format options do generally
+		 comply to the "standard printf" see the man page:
+		 Some special features of m1 printf are:
+
+		      %p      print the object/term symbolically.
+		      %b|%B   print element in base 2
+
+         string sprintf(string format, ...)
+
+	         Returns the formatted string given in 'format'. 
+		 See printf(3) for details.
+
+	unsigned strlen(string)
+
+		 Return the number of characters in the string.
+
+	string strcat(string a, string b)
+
+	        NOTE: this will be implement as + soon
+
+		Return a + b;
+
+	string substr(string a, unsigned pos, unsigned length)
+
+	       Return the string starting at pos and span over
+	       length characters. if length=0 then the rest of
+	       string is returned.
+
+	signed strchr(string a, char c)
+
+	       Return first position where c is located in a.
+	       If c is not found in a then -1 is returned.
+
+	signed atoi(string a)
+
+	       Convert digits in a to a signed number. 
+	       FIXME: No real error handling. throw?
+
+	unsigned atou(string a)
+		 
+	       Convert digits in a to a unsigned number.
+	       FIXME: No real error handling. throw?
+
+	float atof(string a)
+
+	       Convert digits in a to a floating point number.
+	       FIXME: No real error handling. throw?
+
+   EVENT functions
+
+   	 bool updated(event <type> x)
+
+	       Check if event filed has been updated. When script trigger
+	       expression does not fully solve the problem this function
+	       comes in handy.
+
+   	 string sender(event <type> x)
+
+	 	This is a trace debugger function and may only be
+		used with debug compiled vm (and debug compiled code)
+		When calling sender in a trigger script it will tell
+		you where the original event came from. The return 
+		value is on form "file:line" and is normally where
+		the assignment was done.
+
+
+   OBJECT FUNCTIONS
+
+   	  object clone(object x)
+
+	  	 Produce a shallow copy of object x.
+
+
+   	  object copy(object x)
+
+	  	 Produce a deep copy of object x.
+
+
+
+FUTURE EXTENSIONS:
+
+1. Range declaration 
+
+   float(0..10) x
+
+   	 Make sure that the field will be with in 
+	 the range 0 .. 10
+
+2. Range scaling
+
+   	 Rescaleing from event output variables can be done like
+
+         x <- y(10..100)
+
+	 where x and y are declared as a range event fields.
+
+	 event float(3 .. 15) y;
+
+	 event float(0..1000) x;
+
+	 The output range must be with in declared target range
+
+	 i.e (10..100) is with in (0..1000)
+	 
+	 This is a short hand for writing:
+	 
+	 x <- @ScalarInterpolator {key={3,15},
+	      			   keyValue={10,100},fraction<-y}.value;
+				   
+3. Persistent declarations
+
+   To allow for simple persistence the persistent key word is
+   given to any primitive field.
+
+   peristent "com.magden.key1" float x = 10;
+
+   This declaration will internally do:
+
+   float x;
+   Db_float _x_db { key="com.magden.key1" };
+
+
+   Then the default section will look like:
+
+   _DEFAULTS {
+   	     if (_x_db.hasValue) {
+	     	x =  _x_db.value;
+		_x_db.value <-x;   // Store future updates
+	     }
+	     else {
+	     	_x_db.value <-x;   // Store future updates		
+	     	 x = 10;     // Make sure it is saved
+            }
+   }
+
+
+   For dynamic keys then a string variable is used instead of a
+   fixed key:
+
+   	 persistent my_key signed x;
+
+   When no key is given then the key is generated:
+
+   	 persistent signed y;
+
+   Will generate a key on form
+
+   	TypeName:TypeName ... .y
+
+   Note that this scheme only works for singletons like global
+   library variables etc.
+
+
+
+	 
+   
+

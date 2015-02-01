@@ -1,0 +1,127 @@
+
+application SliderTest {
+Screen s;
+EpicTouchDevice touch;
+EpicKeyboardDevice key;
+InputStrategy input_strategy;
+
+//
+// ColorMixer accepts r,g,b as floating point [0,1] and
+// mix into RGB 32-bit value
+//
+type ColorMixer {
+    input event float r;
+    input event float g;
+    input event float b;
+    output event unsigned value;
+
+    script {
+	value = (@byte(r*255) << 16) | (@byte(g*255) << 8) | @byte(b*255);
+    }
+};
+
+
+
+//
+// Height control for the other sliders (BIG 31)
+//
+:Slider:Horizontal sliderH0 =  @:Slider:Horizontal { top=10, left=10, 
+						     height = 31,
+						     width=200,
+						     value = 0.5 };
+
+//
+// Height control for the other sliders (SMALL 15)
+//
+
+:Slider:Horizontal sliderH1 =  @:Slider:Horizontal { top=10, left=220, 
+						     height = 15,
+						     width=200,
+						     value = 0.5 };
+
+//
+// EventPropagte 
+// to output value
+//
+type EventCross {
+     event float a;
+     event float b;
+     output event float value;
+
+     script a {  value = a; }
+     script b {  value = b; }
+};
+
+// Feed both in to a demultiplexor
+EventCross sliderH = @EventCross { a <- sliderH0.value, 
+	   	     		   b <- sliderH1.value };
+
+//
+// Red component control
+//
+
+:Slider:Vertical sliderR =
+     @:Slider:Vertical { top=50, left=100,
+			 width = 15,
+			 height <- 50 + sliderH.value*300,
+			 value = 0.3 };
+
+//
+// Green component control
+//
+:Slider:Vertical sliderG = 
+     @:Slider:Vertical { top=50, left=185,
+			 width = 15,
+			 height <- 50 + sliderH.value*300,
+			 value = 0.3 };
+
+//
+// Blue component control
+//
+:Slider:Vertical sliderB =
+     @:Slider:Vertical { top=50, left=270,
+			 width = 15,
+			 height <- 50 + sliderH.value*300,
+			 value = 0.3 };
+
+//
+// Setup the color mixer
+//
+ColorMixer cm = @ColorMixer { r <- sliderR.value,
+			      g <- sliderG.value,
+			      b <- sliderB.value };
+			     
+
+s = @Screen { height = 480,
+	     width  = 640,
+	     pixelType = "bgra", // 32 bit LE mode working with ffmepg!!!
+	     backendType = "x11",
+	     framebufferDevice = "/dev/fb0",
+	     wantFocus = true,
+	     background = true,
+	     backgroundColor = 0xffffff,
+	     children = {  sliderH0, sliderH1, sliderR, sliderG, sliderB }
+};
+
+s.backgroundColor <- cm.value;
+
+input_strategy = @InputStrategy { layer = s };
+
+touch = EpicTouchDevice {
+	    inputStrategy = input_strategy,
+	    screen = s, // Used to extract mouse
+	    maxUnscaledX = 640,
+	    maxUnscaledY = 480,
+	    minUnscaledX = 0,
+	    minUnscaledY = 0,
+	    scaledWidth = 640,
+	    scaledHeight = 480
+};
+
+key = EpicKeyboardDevice {
+	    inputStrategy = input_strategy,
+	    screen = s // Used to extract key
+};
+
+
+}

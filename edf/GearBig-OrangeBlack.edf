@@ -1,0 +1,150 @@
+#
+#  TB-Numbers-GearBig-OrangeBlack w=304 h=284
+#
+#
+
+imagedir images/GearBig/OrangeBlack
+imagefmt TB-Numbers-GearBig-%s-OrangeBlack.png
+
+begin font
+	foundry Magden
+	family  TB-Numbers-GearBig-OrangeBlack
+	weight  medium
+	slant   other
+	pixel_size 284
+	descent    0
+	ascent     284
+end
+
+#
+# ZERO
+#
+begin glyph
+      code 48  # 0
+      image 0
+      name zero
+end
+#
+# ONE
+#
+begin glyph
+      code 49  # 1
+      image 1
+      name one
+end
+
+#
+# TWO
+#
+begin glyph
+      code 50  # 2
+      image 2
+      name two
+end
+
+#
+# THREE
+#
+begin glyph
+      code 51  # 3
+      image 3
+      name three
+end
+
+#
+# FOUR
+#
+begin glyph
+      code 52  # 4
+      image 4
+      name four
+end
+
+#
+# FIVE
+#
+begin glyph
+      code 53  # 5
+      image 5
+      name five
+end
+#
+# SIX
+#
+begin glyph
+      code 54  # 6
+      image 6
+      name six
+end
+#
+# L
+#
+begin glyph
+      code 76  # L
+      image L
+      name L
+end
+
+#
+# R
+#
+begin glyph
+      code 82  # R
+      image R
+      name R
+end
+
+
+#
+# N
+#
+begin glyph
+      code 78  # N
+      image N
+      name N
+end
+
+#
+# D
+#
+begin glyph
+      code 68 # D
+      image D
+      name D
+end
+
+#
+# +
+#
+begin glyph
+      code 43 # +
+      image PLUS
+      name plus
+end
+
+#
+# -
+#
+begin glyph
+      code 45 # -
+      image HYPHEN
+      name hyphen
+end
+
+#
+# .
+#
+begin glyph
+      code 46 # .
+      image DOT
+      name dot
+end
+
+#
+# ellipses (...)
+#
+begin glyph
+      code 133 # ...
+      image DOTS
+      name ellipses
+end

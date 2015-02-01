@@ -1,0 +1,245 @@
+//
+// CAN bus dyssassembler 
+//
+
+application Candy {
+    Screen s;
+    EpicInputDevice touch;
+    InputStrategy input_strategy;
+    bool probe      = true;
+    int  max_frames = 30;
+    CanDevice device;
+    int cand_y = 5;
+
+    Style candyStyle = @Style { name = "xdigit", backgroundColor = 0x666666,
+			       fontName = "BankGothic Md BT",
+			       fontSize  = 14, fontWeight = medium,
+			       fontSlant = roman, fontColor = 0x000000,
+			       glyphFixedWidth = 12 };
+
+    type CandyBox : Byte {
+	int index;          // current child index
+	int ai;             // The real data index
+	byte oldValue = 0;
+	Timer t = @Timer { cycleInterval = 2.0 };
+
+	script value {
+	    if (value != oldValue) {
+		oldValue = value;
+		style.backgroundColor <-
+		    @ColorInterpolator { key = { 0.0, 1.0 },
+			                 keyValue = { 0xffffff, 0x666666 },
+					 fraction <- t.fraction }.value;
+		t.enabled = true;
+	    }
+	}
+
+	script CandyBox {
+	    style = copy(candyStyle); // copy the style
+	}
+    };
+
+    // Graphical representation
+    // ID [xxx | xxxxxxxx] <d> <xx><xx><xx><xx><xx><xx><xx><xx>
+    type CandyRow : Layer {
+	public  Unsigned frameID;
+	private int      ci         = -1;  // selected child index 
+        private int      doffs      =  0;
+        private float    downTime   =  0;  // button down time
+        private bool     clickCount =  0;
+	private CandyBox dbox;
+	private CandyBox obox;
+        private float    dx;
+	private event float fLeft[9];
+	private event float fWidth[9];
+
+	script CandyRow {
+	    int i;
+	    float x = 0;
+
+	    printf("Create row\n");
+	    fLeft[0] = 5;
+	    frameID = @Unsigned { left <- fLeft[0], 
+	    	      		  class="xdigit", 
+				  format="%08X",
+				  background = true };
+	    //frameID.style := style;
+	    frameID.style.backgroundColor = 0xeeeeee;
+	    children += frameID;
+	    fWidth[0] <- frameID.contentWidth;
+	    
+	    foreach i in [1:8] {
+		CandyBox b;
+
+		fLeft[i] <- 2+fLeft[i-1]+fWidth[i-1];
+		b = @CandyBox { left <- fLeft[i],
+		    	      	class="xdigit", format="%02X",
+			      	index = i, ai = i-1, 
+				background = true };
+	        fWidth[i] <- b.contentWidth;
+		children += b;
+	    }
+	    messageMask = @Message.message_mask_button;
+	    height = frameID.contentHeight;
+	    width  <- fLeft[8] + fWidth[8] + 5;
+	    background = true;
+	    backgroundColor = 0x00ff00;
+	    wantFocus = true;
+	}
+
+	script message when (message.name==buttonDown) && (message.value==1) {
+	    int i;
+	    ci = -1;
+	    downTime = now();
+	    printf("buttonDown x=%f\n", message.x);
+	    foreach i in [1:8] {
+		CandyBox box = @CandyBox(children[i]);
+		if ((message.x >= box.left) && 
+		    (message.x <  (box.left+box.contentWidth))) {
+		    dbox = box;
+		    dx   = box.left;
+		    doffs = message.x - box.left;
+		    printf("box = %d\n", dbox.ai);
+		    ci = i;
+		    break;
+		}
+	    }
+	    messageMask |= @Message.message_mask_motion;
+	}
+
+	script message when (message.name==buttonUp) && (message.value==1) {
+	    if ((now() - downTime) < 0.1)
+		clickCount++;
+	    else
+		clickCount = 0;
+	    if (ci != -1) {
+		CandyBox box = @CandyBox(children[ci]);
+		if (clickCount >= 1) {
+		    if (box.format == "%08b")
+			box.format = "%02X";
+		    else 
+			box.format = "%08b";
+		}
+		box.left <- fLeft[ci];
+		ci = -1;
+		 // turn off motion events
+		messageMask &= ~@Message.message_mask_motion;
+	    }
+	}
+
+	script message when (message.name == motion) && (ci!=-1) {
+	    int i;
+	    CandyBox dbox = @CandyBox(children[ci]);
+	    CandyBox obox;
+
+	    dbox.left = message.x - doffs;
+	    // printf("motion x=%f, ci=%d\n", message.x, ci);
+	    foreach i in [1:8] {
+	        obox = @CandyBox(children[i]);
+		// printf("%d: obox.left=%f, obox.width=%f\n", i, obox.left, obox.contentWidth);
+		if ((i != ci) && (message.x >= obox.left) && 
+		    (message.x < obox.left+obox.contentWidth)) {
+		    ScalarInterpolator si;
+			
+		    si = @ScalarInterpolator { key={0,1},
+					       keyValue={obox.left, dx },
+					       fraction <-
+					       @Timer { cycleInterval=0.2
+				   /* , autoDisconnect=true */ }.fraction };
+			// move the over box into drag box location
+		    printf("swap %d and %d\n", ci, i);
+		    swap(children, ci, i);
+		    // Swap index
+		    obox.index = ci;
+		    dbox.index = i;
+		    ci = i;
+		    dx = fLeft[i];
+		    // Hook up left & width
+		    fWidth[obox.index] <- obox.contentWidth;
+		    fWidth[dbox.index] <- dbox.contentWidth;
+		    obox.left <- si.value; // fLeft[obox.index];
+		    break;
+		}
+	    }
+	}
+    };
+
+    type CandyFrame : CanFrame {
+	unsigned int frame_count = 0;
+
+	script CandyFrame {
+	    float height;
+	    CandyRow row;
+	    int i;
+
+	    printf("Create frame\n");
+	    row = @CandyRow { };
+	    row.frameID.value <- id;
+	    foreach i in [1:8] { 
+		@CandyBox(row.children[i]).value <- data[i-1];
+	    }
+	    height = row.frameID.contentHeight;
+	    row.top = cand_y;
+	    cand_y += height + 2;
+
+	    s.children += row;
+	}
+
+	script id when probe && (mask != id) {
+	    printf("Received frame type = %x\n", id);
+	    // change frame matching to only frames of type id
+	    code = id;
+	    mask = id;
+	    // Add a new catch all frame to device inputs
+
+	    if (size(device.inputs) >= max_frames) 
+		probe = false;
+	    else
+		device.inputs += @CandyFrame { };
+	}
+
+	script {
+	    frame_count++;
+	    if ((frame_count % 1000) == 0)
+		printf("Frame type %x received %u frames\n", id, frame_count);
+	}
+    };
+
+    script Candy {
+	printf("Candy device\n");
+	device = @CanUSBDevice { format = base,
+				 canSpeed  = 500, // 250 for powerbox
+				 port = "/dev/tty.usbserial-LWQ6UYOM",
+				 // port   = "/dev/ttyUSB0",
+				 portSpeed = 230400
+	};
+	printf("Candy screen\n");
+	s = @Screen { height = 720, width  = 640,
+		      pixelType = "bgra",
+		      backendType = "x11",
+		      framebufferDevice = "/dev/fb0",
+		      wantFocus = true,
+		      background = true,
+		      backgroundColor = 0x00ffff,
+		      children = {  }
+	};
+	
+	input_strategy = @InputStrategy {
+	    layer = s 
+	};
+	
+	touch = EpicInputDevice {
+	    inputStrategy = input_strategy,
+	    screen = s, // Used to extract mouse
+	    maxUnscaledX = 640,
+	    maxUnscaledY = 480,
+	    minUnscaledX = 0,
+	    minUnscaledY = 0,
+	    scaledWidth = 640,
+	    scaledHeight = 480
+	};
+
+	// inital frame will catch any thing
+	device.inputs += @CandyFrame { };
+    }
+}

@@ -1,0 +1,9 @@
+{application, pacman,
+ [{description, "pacman"},
+  {vsn, "%VSN%"},
+  {modules, [pacman]},
+  {registered, []},
+  {mod,{pacman,[]}},
+  {env, []},
+  {applications,[epic,kernel,stdlib]}
+  ]}.

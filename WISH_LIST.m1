@@ -1,0 +1,306 @@
+CHANGELOG:
+
+2007-09-06 MAGNUS
+Added wish 7 (q_event).
+Updated wish 6 with a ::= operator.
+---
+
+
+
+
+
+--------------------
+Wish #:      1
+Wish name:  Destructor
+Priority:   Low
+Status:     Implemented
+Description:
+Destructor script and also roll constructor into its own script:
+
+type MyClass {
+  int x = 10;
+
+  script MyClass {
+    printf("Constructor called\n");
+  }
+
+  script ~MyClass {
+    printf("Destructor called\n");
+  }
+
+  // No more top context level constructor code.
+};
+
+Tony:
+Since toplevel file contexts do not have any name, and we need some
+backwards compability maybe we could allow constructor + constructor code 
+
+type MyClass {
+  int x = 10;
+
+  script MyClass {
+    printf("Constructor called\n");
+  }
+
+  script ~MyClass {
+    printf("Destructor called\n");
+  }
+
+  printf("Top Constructor called\n");
+};
+
+Magnus:
+Ack on dual constructor setup, although I am fine with migrating the code.
+
+Tony:
+I have implemented the dual thing, and it works nicely (so far)
+
+################################################################################
+
+Wish #:      2
+Wish name:   Explicit event variable trigger.
+Priority:    Low
+Status:      Under review by Santa
+Description: Optional trigger on constructor assignment.
+
+Code snippet  1;
+
+type MyClass {
+
+  event int x = 1;
+  script x when constructed(x) {
+    printf("x[%d]\n", x);
+  }
+
+};
+MyClass obj = MyClass {};
+
+x will trigger with value 1.
+--
+
+Code example 2:
+
+type MyClass {
+  event int x = 1;
+  script x when constructed(x) {
+    printf("x[%d]\n", x);
+  }
+
+  x = 2;
+};
+MyClass obj = MyClass {};
+
+x will trigger with value 2 since constructor script overrides default constructor.
+--
+
+Code example 3:
+
+type MyClass {
+  event int x = 1;
+  script x when constructed(x) {
+    printf("x[%d]\n", x);
+  }
+};
+MyClass obj = MyClass { x = 2};
+
+x will trigger with value 2 since list constructor overrides default constructor.
+
+--
+
+Code example 4:
+
+type MyClass {
+  event int x = 1;
+  script x when constructed(x) {
+    printf("x[%d]\n", x);
+  }
+  x = 3;
+};
+MyClass obj = MyClass { x = 2};
+
+x will trigger with value 3 since constructor script overrides list constructor.
+
+
+
+################################################################################
+
+Wish #:      3
+Wish name:   Stepped loops.
+Priority:    Low
+Status:      Implemented
+Description: Get a loop to move up or down in given steps.
+step is given in positive or negative values. The linter checks that
+a positive value is given if the loop target is greater than the start, and
+vice versa.
+
+Code example 1.
+int i;
+foreach i in 10 .. 0 step -1 {
+}
+
+foreach i in 0 .. 10 step 1 { // Redundant step 1 is degult.
+}
+
+
+Code example 2.
+float f;
+foreach f in 0 .. 10 step 0.1 { }
+
+Code example 3.
+int s = 1;
+int i;
+
+foreach i in 0 .. 10 step s { }
+
+Code example 4.
+int x;
+int xs[] = {1,2,3,4,5,6,7,8};
+int sum;
+foreach x in xs step 2 { sum += x; }
+
+
+
+################################################################################
+
+Wish #:      4
+Wish name:   Mixed declarations and instansiations.
+Priority:    Medium
+Status:      Implemented
+Description: Intermix class declarations with declarations of objects.,
+Code example:
+
+type MyClass1 {
+     int x;
+};
+
+MyClass1 obj1 = MyClass1 { x = 1 };
+
+type MyClass2 {
+     int y;
+
+     y = obj1.x;
+};
+
+
+################################################################################
+
+Wish #:      5
+Wish name:   Forced propagation
+Priority:    Low
+Status:      Rejected, use = 
+Description: Allows a specific value to be proagated throughout
+             a subscription tree without altering the subscription setup.
+Code example:
+
+event int a;
+event int b;
+event int c;
+event int x = 10;
+
+script a {
+       printf("a[%d]\n", a);
+}
+
+script b {
+       printf("b[%d]\n", b);
+}
+
+script c {
+       printf("c[%d]\n", c);
+}
+
+c <- b;
+b <- a;
+
+// b <- (( x + 1 )); // Does not change b's subscription
+// TRY THIS :-)
+b = (( x + 1 )); // Does not change b's subscription
+
+// OR THIS! Magnus 2007-09-06
+b ::= x + 1;
+
+output:
+b[11];
+c[11];
+
+
+################################################################################
+
+Wish #:      6
+Wish name:   Primitive type cast
+Priority:    Medium
+Status:      Implemented, use @<type> ( expr )
+Description: Cast types like, int, floats, etc to other primitive types
+Code example:
+
+int a = 1;
+unsigned int b = 2;
+float x = @float(a) / @float(b);
+printf("x = %f\n", x);
+
+outputs: x = 0.5
+
+NOTE
+as a ugly hack case you can also do things like:
+
+int a = 0;
+@float(a) =  pi();
+printf("a=%d, a=%f\n", a, a);
+
+And then use 'a' as an integer. It can be used by people that 
+like to bit manipulate the float representation ;-)
+
+
+##########################################
+
+Wish #:      7
+Wish name:   Queued event types
+Priority:    Low
+Status:      Under review by Santa, but it looks good.
+Description: 
+Today multiple assignments to an event variable during
+a signle sweep are lost:
+
+event int x;
+
+script x {
+       printf("x = %d\n", x);
+}
+
+// Note: This will not work in real life since
+//       we are assigning in constructor, but
+//       you get the gist of it...	 
+
+x = 1; // Will be lost.
+x = 2;
+
+Output:
+x = 2
+
+Solution:
+Implement a q_event keyword where assignments to a q_event declared variable
+will be queued. The foremost element in the queue will be assigned to the variable
+during each sweep, triggering propagation and script executions:
+
+q_event int x;
+event int y <- x;  // Could be declared as q_event, but that is not needed here.
+
+script x {
+       printf("x = %d\n", x);
+}
+
+
+script y {
+       printf("y = %d\n", y);
+}
+
+x = 1;
+x = 2;
+
+Output:
+# First assignment sweep
+x = 1;
+y = 1;
+# Second assignment sweep
+x = 2;
+y = 2;

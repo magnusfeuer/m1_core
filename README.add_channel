@@ -1,0 +1,36 @@
+HOW TO ADD A CHANNEL:
+1.  Add a (sequential) constant to engine_const.m1
+    If you want the channel to show up as a variant in the skins
+    (for example mph/kph which are both speed variants), ensure that
+    the constants for the variant channels are next to each other.
+
+2.  Update the 'count' constant in engine_const.m1
+
+3.  Add a desc entry in engine_const.m1 at a slot matching the constants specified in step 1.
+    If you want the channel to be a variant, set the name entry to the same value as the other
+    variants. Set the unitType to the value to be displayed as a variant at the top line of 
+    the instrument select menu (kph/mph, fahrenheit/celcius etc).
+
+4.  Add entry in small_templates/large_templates in circle_skin.m1 and 
+    traditional_skin.m1 specifying the gauge template to use. Use the 
+    index corresponding to the constant in step 1.
+
+5.  Add entry in gauge_templates in lifestyle_skin at the slot corresponding to the constant in step 1.
+
+6.  Add a channel profile in engine_base.m1 - VehicleProfile constructor.
+
+--- If this is a virtual channel calculated based on values of other channels.
+
+7a. Update the usage calculation for the channel(s) used to calculate the value in
+    m1/skins/common/apex_engine/trunk/apex_engine.m1, so that the apex_device.cc
+    driver knows how many channels are using any given ECU PID.
+
+7b. Edit enginge_base.m1 EngineBase::setupDependentChannel script with a channel calculation
+
+--- If this is a new channel (PID) reported directly from the ECU.
+
+8a. Add channel to all drivers.
+
+8b. Add channel to apex_engine.m1, consult_engine.m1 and pi_engine.m1 
+
+---

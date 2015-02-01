@@ -1,0 +1,81 @@
+30-05-2007
+	Implement a font tool for X11 and rip the "bank gothic"
+	font for 20 and 24 points, medium weight.
+
+	     01-06-2007
+
+			Partly implemented by using the edf font
+			format for png images.
+			Used fstobdf to convert radio space fonts.
+
+
+30-05-2007
+	Implement video recording capability, save result on
+	a file. VideoRecord Component? Injecting to a screen/layer?
+	or as a special screen ?
+
+28-05-2007
+	 Make type conversion in the linter, off loading the
+	 compiler and the eval. Detect and add calls to
+	 functions like float2signed, unsigned2float...
+
+28-05-2007
+	Replace tokens in expression node with operation codes.
+	instead of '-' then use op_SUB for the general case
+	and when type checking is done op_SUB is replaced by either
+	op_SUBi, op_SUBu, op_SUBf. With + we will have op_ADD then
+	op_ADDi, op_ADDu, op_ADDf, op_ADDs.
+
+	29-05-2007
+		Fixed converting all internal operators. After total
+		type checking and type conversion is done in linter
+		the operators will also be types (i.e op_SUB => op_SUBi etc)
+		
+28-05-2007	  
+	 Implment array copy.
+	 assignment of (fixed) array MUST be done by copy.
+	 Today the array is just replaced. Boring side effects.
+
+28-05-2007
+	Implement connect expressions. x <- y + 1 as
+	suger for
+	      type _Tx0 {
+		     input event float _in0;   // y
+		     output event float _out;
+
+		     script { out = in1 + 1; }
+		}
+		x <- @_Tx0 { _in0 <- y }._out;
+
+        29-05-2007
+
+		Fixed. Most cases are working. Still some work
+		on the type checking for type convertion in the
+		output.
+
+28-05-2007
+	Dynamic m1 loading. Loading of undefined types.
+	This could be done by looking in a path for 
+	a file called <type>.m1  and later <type>.m1c (or both)
+	looking for a type called :UI:Button will load a
+	file called UI.m1 (UI.m1c) then try to find Button inside.
+
+28-05-2007
+	Compiler work. Should be staight forward after the linter
+	has done it's work. We may want to resolve indices at runtime.
+	First compiler could work in compile while loading mode.
+
+25-11-2007
+	Change builtin function type spec using string type specs,
+	instead of simple type tags. Today type tags can not be used
+	to specifiy float arrays or string array for example.
+	M1TYPE_ARRAY will then be replaced by "s[]" or "f[]"
+	
+
+25-11-2007
+	Lint Compund statments into stack operators, everythings 
+	should be ready in eval to do this transformation.
+	Today objects are created in compund this is no longer neccesary
+	since we dropped the idea of nested environments.
+
+	  

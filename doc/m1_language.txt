@@ -1,0 +1,111 @@
+
+M1 Language description
+
+The M1 Languae is aimed to be a configuration and implementation language
+to be used in Magdan M1 car dashboard computer.
+
+The language is influenced by VRML and C++ and SmallTalk in a nice mix.
+
+M1L is used to bridge and configure plugin objects impemented in C++/C,
+M1L can be used to implement it's own objects.
+
+The M1 is a data/event driven system and there are constucts in M1L
+to connect input and output events in a dynamic fashion to construct
+complicated setups.
+
+1. Type declarations
+
+To create a new object the type must first be declared as.
+
+<type-declarator> ::=
+       ['extern'] 'type' <type-name> <declarator> ';'
+
+The type name <name> SHOULD be on form U(U|L|D|_-)*.
+
+Example:
+	type Rect { signed x, signed y };
+
+	type Colorf float[3];
+	type Pixel  byte[3];
+
+When the type is implement in a plugin or in core then extern keyword
+is used before the type.
+
+Example:
+	extern type Screen {};
+
+1.1 Structured type
+
+To define a "class" in M1L then the type name is followed by 
+curly brackets to start a block of field declaraions.
+
+<declarator> ::= 
+    [':' <parent-type-name>] '{' <field-declaration>* <script-declaration>* '}'
+
+<field-declaration> ::=
+    <qualifier>* <type> <field-name> ['*'] [<array-decl>]
+    		  ['=' <default-value> ]
+
+<qualifier> ::= 'public' | 'private' | 'input' | 'output' |
+	    	'extern' | 'persistent'
+
+<parent-name> ::= <type-name>
+
+<type> ::=
+    'byte' | 'char' | 'signed' | 'unsigned' | 'float' | 'string' |
+    <type-name>
+
+<array-decl> ::= '[' <unsigned> ']' [<array-decl>] | '[' ']'
+
+Example:
+   extern class PositionInterpolator {
+      input float fraction;
+      output Point value;
+      float key[];
+      Point keyValue[];
+   }
+
+1.2 Scripting
+
+When input fields in types are connected to output's from other objects
+e.g Timers etc, the object is scheduled to run actions.
+To run action on input change then a script is used.
+Plugin normally impleted the actions in C++.
+
+<script-declaration> ::=
+    'script' [<field-name> [',' <field-name>]] ['when' <expr>] '{'
+        ( <variable-declaration> ';' ) *
+	( <statement> ';' )*
+    '}'
+
+<variable-declaration> ::=
+    <type> <variable-name> ['*'] [<array-decl>] ['=' <init-expr> ]
+
+<statement> ::=
+    <rexpr> '=' <expr> |
+    TO BE CONTINUED
+
+
+Example:
+    type ScalarInterpolator {
+        float key[];                   // Key Range
+        float keyValue[];              // Value Range
+        input  float fraction;
+        output float value; 
+
+        script fraction {
+           unsigned i = RangeIndex(fraction, key);
+           float scale    = 1-(key[i+1]-key[i]);
+           value = keyValue[i]+scale*(keyValue[i+1]-keyValue[i]);
+        }
+   }
+       
+
+
+
+
+
+
+
+
+

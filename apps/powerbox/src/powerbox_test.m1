@@ -1,0 +1,52 @@
+//
+//  Powerbox testing
+//
+//
+application PowerBoxTest {
+
+Timeout t1;
+event bool timeout;
+event float an24;
+event float an25;
+event float an26;
+unsigned an_count = 0;
+
+script timeout {
+       printf("STOP streaming got %d frames\n", an_count);
+       .PowerBox.cset[4].an2 = 0;
+       .PowerBox.cset[5].an2 = 0;
+       .PowerBox.cset[6].an2 = 0;
+//       .M1.halt = 1000;
+}
+
+script an24 {
+       printf("GOT AN2 4 %f\n", an24);
+       an_count++;
+}
+
+script an25 {
+       printf("GOT AN2 5 %f\n", an25);
+       an_count++;
+}
+
+script an26 {
+       printf("GOT AN2 6 %f\n", an26);
+       an_count++;
+}
+
+t1 = @Timeout { duration = 3.0 };
+
+.PowerBox.cset[4].an2 = 1;
+.PowerBox.cset[5].an2 = 1;
+.PowerBox.cset[6].an2 = 1;
+
+an24 <- .PowerBox.cin[4].an2;
+an25 <- .PowerBox.cin[5].an2;
+an26 <- .PowerBox.cin[6].an2;
+
+
+timeout <- t1.timeout;
+
+}
+
+

@@ -1,0 +1,107 @@
+#
+#  TB-Numbers-Big-OrangeBlack w=53 h=49
+#
+
+imagedir images/Big/OrangeBlack
+imagefmt TB-Numbers-Big-%s-OrangeBlack.png
+
+begin font
+	foundry Magden
+	family  TB-Numbers-Big-OrangeBlack
+	weight  medium
+	slant   other
+	pixel_size 41
+	descent    4
+	ascent     45
+end
+
+begin glyph
+      code 48  # 0
+      image 0
+      name zero
+end
+
+begin glyph
+      code 49  # 1
+      image 1
+      name one
+end
+
+begin glyph
+      code 50  # 2
+      image 2
+      name two
+end
+
+begin glyph
+      code 51  # 3
+      image 3
+      name three
+end
+
+begin glyph
+      code 52  # 4
+      image 4
+      name four
+end
+
+begin glyph
+      code 53  # 5
+      image 5
+      name five
+end
+
+begin glyph
+      code 54  # 6
+      image 6
+      name six
+end
+
+begin glyph
+      code 55  # 7
+      image 7
+      name seven
+end
+
+begin glyph
+      code 56  # 8
+      image 8
+      name eight
+end
+
+begin glyph
+      code 57  # 9
+      image 9
+      name nine
+end
+
+begin glyph
+      code 43 # +
+      image 10
+      name plus
+end
+
+begin glyph
+      code 45 # -
+      image 11
+      name hyphen
+end
+
+begin glyph
+      code 46 # .
+      image 12
+      name dot
+end
+
+begin glyph
+      code 63 # ?
+      image QUESTION
+      name question
+end
+
+begin glyph
+      code 47 # /
+      image SLASH
+      name slash
+end
+

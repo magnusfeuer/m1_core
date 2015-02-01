@@ -1,0 +1,353 @@
+#
+# Home brewed Makefile for Digidash.
+#
+CXX := @CXX@
+CC = gcc
+include ../Version.inc
+BINDIR := ../../bin
+TARGET := $(BINDIR)/@Target@
+INCDIR := ../include
+UNAME := $(shell uname)
+RANLIB := ranlib
+
+ifeq ($(TYPE), debug)
+OBJDIR=../obj/debug
+BINSFX=.debug
+else
+ifeq ($(TYPE), prof)
+OBJDIR=../obj/prof
+BINSFX=.prof
+else
+ifeq ($(TYPE), drm)
+OBJDIR=../obj/drm
+BINSFX=.drm
+else
+OBJDIR=../obj/release
+BINSFX=
+endif
+endif
+endif
+
+# MOVE TO configure.ac 
+PNG_CFLAGS := $(shell libpng-config --I_opts)
+PNG_LIBS   := $(shell libpng-config --libs)
+PNG_LFLAGS := $(shell libpng-config --ldflags)
+
+GIF_CFLAGS := -I@LIBUNGIF_DIR@/include
+GIF_LIBS   := -lungif
+GIF_LFLAGS := -L@LIBUNGIF_DIR@/lib
+
+# MOVE TO configure.ac
+# JPEG_CFLAGS := -I/opt/include -DHAVE_LIBJPEG
+# JPEG_LIBS   := -ljpeg
+# JPEG_LFLAGS := -L/opt/local/lib
+
+# FIXME: configure does not generate these correctly.
+# FFMPEG_LIB = @FFMPEG_LIB@ @FFMPEG_SWSCALE_LIB@ @FFMPEG_AVCODEC_LIB@
+FFMPEG_LIB = -lavformat -lavcodec -lavutil -lswscale
+
+OPENSSL_LIB = -lcrypto # TODO: Move into configure.ac
+
+
+M1E_SRC = \
+	m1e_main.cc
+
+M1C_SRC = \
+	m1c_main.cc
+
+M1VM_TEST_SRC = \
+	m1vm_test.cc
+
+M1_TYPEINFO_SRC = \
+	m1_typeinfo.cc
+
+
+M1E_TARGET = \
+	$(BINDIR)/m1e$(BINSFX)
+
+
+M1C_TARGET = \
+	$(BINDIR)/m1c$(BINSFX)
+
+M1VM_TEST_TARGET = \
+	$(BINDIR)/m1t$(BINSFX)
+
+M1_TYPEINFO_TARGET = \
+	$(BINDIR)/m1_typeinfo$(BINSFX)
+
+# runtime library objects
+RT_C_SRC = \
+	bf_zlib.c
+
+RT_SRC = \
+	m1rt.cc \
+	key_util.cc \
+	key.cc \
+	key_store.cc \
+	packfile.cc \
+	octet_buffer.cc \
+	bio_stream.cc
+
+# Standard components
+STD_SRC = \
+	dev_component.cc \
+	systime_component.cc \
+	input_strategy.cc \
+	input_device.cc \
+	file_source.cc \
+	epic_input_device.cc \
+	epic_thread.cc \
+	database.cc \
+	db_component.cc \
+	dds_file.cc \
+	font_cache.cc \
+	dds_component.cc \
+	screen_component.cc \
+	shape_component.cc \
+	format_component.cc \
+	image_component.cc \
+	video_component.cc \
+	plot_component.cc \
+	pfl_component.cc \
+	can_device.cc \
+	event_recorder.cc \
+	event_player.cc
+
+# Base objects
+BASE_SRC = \
+	component.cc \
+	sweeper.cc \
+	geometric.cc \
+	scalar_interpolator.cc \
+	color_interpolator.cc \
+	position_interpolator.cc \
+	interpolator.cc \
+	time_sensor.cc \
+	sampler.cc \
+	fft.cc \
+	style.cc \
+	message.cc
+
+# Virtual machine sources
+M1VM_SRC = \
+	m1vm.cc \
+	m1_lex.cc \
+	m1_parser.cc \
+	m1c_bytecode.cc \
+	m1c_vmload.cc \
+	m1c_print.cc \
+	m1c_lint.cc \
+	m1c_eval.cc
+
+M1VM_OBJ = \
+	$(OBJDIR)/m1_parse.o \
+	$(M1VM_SRC:%.cc=$(OBJDIR)/%.o)
+
+RT_LIB   = $(OBJDIR)/m1rt.a
+BASE_OBJ = $(BASE_SRC:%.cc=$(OBJDIR)/%.o) 
+RT_OBJ   = $(RT_SRC:%.cc=$(OBJDIR)/%.o) $(RT_C_SRC:%.c=$(OBJDIR)/%.o)
+STD_OBJ = $(STD_SRC:%.cc=$(OBJDIR)/%.o)
+M1E_OBJ = $(M1E_SRC:%.cc=$(OBJDIR)/%.o)
+M1C_OBJ = $(M1C_SRC:%.cc=$(OBJDIR)/%.o)
+M1VM_TEST_OBJ = $(M1VM_TEST_SRC:%.cc=$(OBJDIR)/%.o)
+M1_TYPEINFO_OBJ = $(M1_TYPEINFO_SRC:%.cc=$(OBJDIR)/%.o)
+
+EPIC_INCDIR = ../epic/include
+
+X11_LIB=
+CARBON_LIB=
+
+ifeq "$(WITH_X11)" "1"
+X11_LIB=-L/usr/X11R6/lib -lX11
+endif
+
+
+ifeq "$(UNAME)" "Darwin"
+CARBON_LIB=-framework Carbon -framework CoreFoundation -framework Foundation -framework OpenGL -framework AGL -Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib
+X11_LIB=-L/usr/X11R6/lib -lX11
+OS_CFLAGS= -DDARWIN=1  -I/opt/local/include -mdynamic-no-pic
+LDFLAGS:=-Wl,-search_paths_first -sectcreate __TEXT __info_plist m1.plist
+else
+OS_CFLAGS= -rdynamic
+LDFLAGS:=-rdynamic -lpthread
+endif
+
+
+ifeq ($(TYPE), debug)
+COMPILE_FLAGS= -g -DUSE_ETHREAD -D_THREAD_SAFE -D_REENTRANT -DDEBUG -msse2
+EPIC_LIB = ../epic/lib/debug/epic.a
+else
+ifeq ($(TYPE), prof)
+COMPILE_FLAGS= -pg -msse2
+LDFLAGS += -pg
+EPIC_LIB = ../epic/lib/release/epic.a
+else  # drm or release
+COMPILE_FLAGS=-O3 -DUSE_ETHREAD -D_THREAD_SAFE -D_REENTRANT -msse2
+EPIC_LIB = ../epic/lib/release/epic.a
+endif
+endif
+
+ifeq ($(TYPE), drm)
+COMPILE_FLAGS:= $(COMPILE_FLAGS) -DM1_DRM=1
+endif
+
+# common compile flags
+COMMON_CFLAGS=-DVERSION=\"$(VERSION)\" -Wall -I../extern/include  @FFMPEG_INCLUDE@ -I$(INCDIR) -I$(EPIC_INCDIR) $(PNG_CFLAGS) $(JPEG_CFLAGS) -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DUSE_FFMPEG  
+
+# combined compile flags
+CXXFLAGS:= $(COMMON_CFLAGS) $(COMPILE_FLAGS) $(OS_CFLAGS) $(CFLAGS)
+
+LIBS = -L../extern/lib $(FFMPEG_LIB) $(OPENSSL_LIB)  $(X11_LIB) $(CARBON_LIB) $(EPIC_LIB) $(PNG_LFLAGS) $(JPEG_LFLAGS) $(JPEG_LIBS)  -lm -ldl -lz
+#
+# Debug entry points (default)
+#
+all:   rtlib debug release drm # $(M1E_TARGET) $(M1C_TARGET) $(M1VM_TEST_TARGET) $(M1_TYPEINFO_TARGET)
+
+debug:
+	$(MAKE) TYPE=debug m1e_target m1c_target
+
+prof:
+	$(MAKE) TYPE=prof m1e_target m1c_target
+
+test:
+	$(MAKE) TYPE=debug m1t_target
+
+m1e_debug:
+	$(MAKE) TYPE=debug m1e_target
+
+m1e_prof:
+	$(MAKE) TYPE=prof m1e_target
+
+m1c_prof:
+	$(MAKE) TYPE=prof m1c_target
+
+m1c_debug:
+	$(MAKE) TYPE=debug m1c_target
+
+m1t_debug:
+	$(MAKE) TYPE=debug m1t_target
+
+m1_typeinfo_debug:
+	$(MAKE) TYPE=debug m1_typeinfo_target
+#
+# Relase entry points
+#
+release:
+	$(MAKE) TYPE=release m1e_target m1c_target
+
+drm:
+	$(MAKE) TYPE=drm m1e_target m1c_target
+
+m1e:
+	$(MAKE) TYPE=release m1e_target
+
+m1c:
+	$(MAKE) TYPE=release m1c_target
+
+m1t:
+	$(MAKE) TYPE=release m1t_target
+
+m1_typeinfo:
+	$(MAKE) TYPE=release m1_typeinfo_target
+
+
+
+rtlib: 
+	$(MAKE) TYPE=drm ../obj/drm/m1rt.a
+	$(MAKE) TYPE=release ../obj/release/m1rt.a
+	$(MAKE) TYPE=debug ../obj/debug/m1rt.a
+
+#
+# Clean both debug and release object dirs.
+#
+clean:
+	$(MAKE) TYPE=debug clean_target
+	$(MAKE) TYPE=release clean_target
+	$(MAKE) TYPE=drm clean_target
+
+m1e_target:	$(M1E_TARGET)
+
+
+$(M1E_TARGET):	$(EPIC_LIB) $(RT_LIB) $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1E_OBJ)
+	$(CXX) $(LDFLAGS) -o $@ $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1E_OBJ) $(RT_LIB) $(LIBS)
+ifneq "$(UNAME)" "Darwin"
+ifneq "$(TYPE)" "debug"
+ifneq "$(TYPE)" "prof"
+	strip $@
+endif
+endif
+endif
+
+
+m1c_target:	$(M1C_TARGET)
+
+$(M1C_TARGET):	$(RT_LIB) $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1C_OBJ)
+	$(CXX) $(LDFLAGS) -o $@ $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1C_OBJ) $(RT_LIB) $(LIBS)
+ifneq "$(UNAME)" "Darwin"
+ifneq "$(TYPE)" "debug"
+ifneq "$(TYPE)" "prof"
+	strip $@
+endif
+endif
+endif
+
+m1_typeinfo_target:	$(M1_TYPEINFO_TARGET)
+
+$(M1_TYPEINFO_TARGET):	$(RT_LIB) $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1_TYPEINFO_OBJ)
+	$(CXX) $(LDFLAGS) -o $@  $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1_TYPEINFO_OBJ) $(RT_LIB) $(LIBS)
+ifneq "$(UNAME)" "Darwin"
+ifneq "$(TYPE)" "debug"
+	strip $@
+endif
+endif
+
+m1t_target:	$(M1VM_TEST_TARGET)
+
+$(M1VM_TEST_TARGET):	$(RT_LIB) $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1VM_TEST_OBJ)
+	$(CXX) $(LDFLAGS) -o $@ $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1VM_TEST_OBJ) $(RT_LIB) $(LIBS)
+ifneq "$(UNAME)" "Darwin"
+ifneq "$(TYPE)" "debug"
+	strip $@
+endif
+endif
+
+$(RT_LIB):	$(RT_OBJ)
+	rm -f $@
+	$(AR) rcv $@ $(RT_OBJ)
+	$(RANLIB) $@
+
+
+$(OBJDIR)/m1_lex.o:	m1_keywords.hh
+
+m1_keywords.hh:	m1_keywords
+	gperf -t -LC++ m1_keywords > m1_keywords.hh
+
+$(OBJDIR)/m1_parse.o:	m1_parse.cc ../include/m1.hh ../include/m1vm.hh ../include/m1c.hh m1_parser.hh m1_lex.hh
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
+
+m1_parse.cc m1_parse.hh:	m1.y
+	bison -S ./lalr1pp.cc -v -d -pm1_ -om1_parse.cc m1.y
+
+-include depend.mk
+
+
+clean_target:
+	rm -f  $(M1E_TARGET) $(M1C_TARGET) $(M1VM_TEST_TARGET) $(M1_TYPEINFO_TARGET) $(RT_LIB) $(M1E_OBJ) $(M1C_OBJ) $(RT_OBJ) $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) m1_parse.cc m1_parse.hh stack.hh location.hh
+
+depend: m1_parse.hh
+	$(CXX) -MM $(COMMON_CFLAGS) $(OS_CFLAGS)  $(M1E_SRC) $(M1C_SRC) $(M1VM_TEST_SRC) $(M1_TYPEINFO_SRC) $(STD_SRC) $(BASE_SRC) $(RT_SRC) $(RT_C_SRC) $(M1VM_SRC) | sed -e 's#\(.*\.o\):#\.\./obj/release/\1:#g' > depend.mk
+	$(CXX) -MM -DDEBUG $(COMMON_CFLAGS) $(OS_CFLAGS) $(M1E_SRC) $(M1C_SRC) $(M1VM_TEST_SRC) $(M1_TYPEINFO_SRC) $(STD_SRC) $(BASE_SRC) $(RT_SRC) $(RT_C_SRC) $(M1VM_SRC) | sed -e 's#\(.*\.o\):#\.\./obj/debug/\1:#g' >> depend.mk
+
+
+
+$(OBJDIR)/%.o: %.cc
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
+
+$(OBJDIR)/%.o: %.c
+	$(CC) -c $(CXXFLAGS) -o $@ $<
+
+spotless: clean
+	rm -f *~ Makefile
+
+epic:
+	(cd ../epic/src; make debug opt WITH_X11=$(WITH_X11))

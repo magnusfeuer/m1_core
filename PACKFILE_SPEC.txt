@@ -1,0 +1,214 @@
+The packfile is used to distribute content from a server to an m1 unit. Each
+packfile is contains the following information:
+
+<m1-packfile-start>
+[Header]
+[Content 1]
+[Content 2]
+[Content 3]
+...
+[Content N]
+<m1-packfile-end>
+
+The packfile is almost not at all based on mime.
+
+A line is terminated by an optional CR and a mandatory NL.
+
+Any packfile bytes before to the start marker line "<m1-packfile-start>" is
+ignored. 
+
+Any packfile bytes following the final "<m1-packfile-end>" marker line will
+be ignored. There is no risk that this marker will be confused with content
+since each content has its start and length specified explicitly by its
+Content: field.
+
+
++++ HEADER FORMAT
+
+The Header has a number of fields, which may be specified in arbirtray order. 
+
+Each field spans one line.
+
+Each field consists of a field name, immediately followed by a colon, a
+single whitespace, and  field value. The field value is terminated by the end of
+the line. 
+
+Field names and values are given in UTF-8. Double quotes can be used to
+enclose newlines in a field value.
+
+All fields are listed at the beginning of the file with no blank lines between
+them. A single empty line separates the last field from the first byte of the
+content itself, as defined by one or more Content: fields.
+
+
+The following field names are supported:
+
+Field name:          Format-Version
+Field value type:    Numeric
+Mandatory/Optional:  Mandatory
+Example:             Format-Version: 1
+Multiple occurances: No
+Description:
+Contains the format version of this packfile.
+The value is a sequentially increasing number starting with 1 (this version).
+
+
+
+Field name:          From
+Field value type:    Email address format.
+Mandatory/Optional:  Mandatory
+Example:             From: m1_master@magden.us
+Multiple occurances: No
+Description:
+Specificies who originated this packfile. It is also used to validate
+signatures. The username (m1_master) of the value is an arbitrary account
+name. The domain name (magden.us) specifies a content provider that is
+validated by magden. The content provider can also be magden itself.
+
+
+
+Field name:          To
+Field value type:    Serial number
+Mandatory/Optional:  Optional
+Example:             To: ABC123
+Multiple occurances: No
+Description:
+Specifies which m1 unit this content is keyed for. If this field is not
+present,  the content can be installed on any m1 unit.
+
+
+
+Field name:          Name
+Field value type:    String
+Mandatory/Optional:  Mandatory
+Example:             Name: SilverLight
+Multiple occurances: No
+Description:
+Specifies name that together with the From: value forms a unique name
+for this packfile. An example of a unique name would be 
+m1_master@magden.us/SilverLight. This unique identifier foramt is used by the
+Needs field described below.
+
+
+
+Field name:          Version
+Field value type:    Version string
+Mandatory/Optional:  Mandatory
+Example:             Version: 1.2.3
+Multiple occurances: No
+Description:
+Version of packfile.. 
+First number (1 in the example above)  specifies the major number. All 
+releases within the same major number are API compatible with each other.
+Second number (2) specifies the minor number. A new minor release is backward
+compatible with any older release within the same major release, but may add
+additional functionality.
+Third number (3) specifies patches. No additional functionality can be added
+with a patch release.
+
+
+
+Field name:          Needs
+Field value type:    Unique package name and version
+Mandatory/Optional:  Optional
+Example:             Needs: m1_master@magden.us/CoreSkin/1.0.0
+Multiple occurances: Yes
+Description:
+Describes a packet that this packfile need in order to function. If it is not
+present on the system or on the distribution media where the packfile itself
+resides, an error should be raised.
+
+
+
+NOT USED!
+Field name:          Public-Key
+Field value type:    String
+Mandatory/Optional:  Optional.
+Example:             Public-Key: ABC123
+Multiple occurances: No
+Description:
+Identifies the public key in the keystore (signed by magden.key) to use when
+validating the content. New public keys can be installed as
+application/m1-pubkey content.
+
+
+
+
+Field name:          Signature
+Field value type:    String
+Mandatory/Optional:  Mandatory
+Example:             Signature: XYZZY
+Multiple occurances: No
+Description:
+Contains the signature for the packfile content as provided by the originator
+specified in the From: field. The signature is an SHA1 checksum which is
+encrypted by the originator's private key and can be decrypted by the key
+given in Public-Key (if it in its turn can be decrypted by magden.pub).
+If the Public-Key field is not provided, the signature can be decrypted
+directly by magden.pub.
+
+
+
+
+Field name:          Content
+Field value type:    mime-type:filename:start:length:file_type
+Mandatory/Optional:  Mandatory
+Example:             Content: image/dds:dds/background.dds:0:4711:f
+Multiple occurances: Yes
+Description:
+Each Content field describes a single file contained in the packfile.
+The mime-type specifies the internet media type of the file. 
+The filename specifies an absolute path (from /) where the file content should
+be installed. 
+The start value specifies the number of bytes from the content start byte
+(which first byte after the empty cr/nl field/content separator line) that
+this content can be found.
+The length value specifies the number of bytes that the content spans from the
+starting byte. 
+file_type can be one of the following
+d - Directory
+b - Block special device
+c - Char special device
+f - FIFO (SysV)
+s - Named pipe socket.
+S - Symbolic link
+l - Hardlink
+r - Regular file
+
+An example that installs "Hello world\n" in a file called /tmp/hello.txt is
+given below:
+...
+Content: plain/text:tmp/hello.txt:0:12:r
+
+Hello world
+<m1-packfile-end>
+
+
+NOT USED
+Field name:          Pre-Execute
+Field value type:    start:length
+Mandatory/Optional:  Optional
+Example:             Pre-Execute: 4711:1174
+Multiple occurances: Yes
+Description:
+Specifies code to execute before the content is extracted. The content
+specified by the start:length field is extracted to a temporary file, which is
+made executable, and is then run with all fields provided as arguments.
+If multiple Pre-Execute fields are present, they will be executed in the order
+the fields appear in the header.
+
+
+NOT USED
+Field name:          Post-Execute
+Field value type:    start:length
+Mandatory/Optional:  Optional
+Example:             Post-Execute: 4711:1174
+Multiple occurances: Yes
+Description:
+Specifies code to execute after the content is extracted. The content
+specified by the start:length field is extracted to a temporary file, which is
+made executable, and is then run with all fields provided as arguments.
+If multiple Post-Execute fields are present, they will be executed in the order
+the fields appear in the header.
+
+

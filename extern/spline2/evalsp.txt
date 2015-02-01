@@ -1,0 +1,15 @@
+	To use the spline S(x), run   'evalsp splrep [options...]'\n");
+	                               -> file 'evlres': x, S(x), S'(x), S''(x)\n");
+	                               By default: in 2001 equidist. x-values\n");
+	options: [-x xbeg xend xstep]              in these equidist. x-values\n");
+	         [-f xfilename                     in x-values listed in xfile\n");
+	         [-F sbeg send sstep]  Fourier transform of S(x)\n");
+	                               -> file 'evlfour': s, Re(FT), Im(FT)\n");
+	                               -> screen, -> file 'evlsum':\n");
+	         [-e]                  Show maxima and minima of S(x)\n");
+	         [-i]                  Show inflection points of S(x)\n");
+	         [-v val]              Show x-value at which S(x)=value\n");
+	         [-a]                  Show integral of S(x)\n");
+	         [-h [-b val]]         Show points at half-height of peak\n");
+	                               (-b forces the background at val)\n");
+	=====================================================================\n");

@@ -1,0 +1,47 @@
+#
+# Home brewed Makefile for ddscompile
+# (C) 2006 Magden LLC.
+#
+CXX := g++
+include ../../Version.inc
+BINDIR := ../../../bin
+TARGET := $(BINDIR)/ddscomp
+COREINC := ../../include
+EPICINC := ../../epic/include
+EPICLIB := ../../epic/lib/release/epic.a
+
+PNG_CFLAGS := $(shell libpng-config --I_opts)
+PNG_LIBS   := $(shell libpng-config --libs)
+PNG_LFLAGS := $(shell libpng-config --ldflags)
+
+GIF_CFLAGS := -I/usr/include
+GIF_LIBS   := -lungif
+GIF_LFLAGS := -L/usr/lib
+
+MPG_CFLAGS := -I../../extern/include
+MPG_LIBS   := -lswscale -lavformat -lavcodec -lavutil -lz
+MPG_LFLAGS := -L../../extern/lib
+
+OBJ =	 ddsgif.o ddspng.o ddscomp.o lhash.o ddsmpg.o
+
+CXXFLAGS:=-g -O2  -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS $(MPG_CFLAGS) $(PNG_CFLAGS) $(GIF_CFLAGS) -I$(EPICINC) -I$(COREINC) -DVERSION=\"$(VERSION)\" -Wall
+
+giftest:	CXXFLAGS += -DTEST
+
+$(TARGET): $(OBJ)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(MPG_LFLAGS) $(PNG_LFLAGS)$  $(OBJ) $(MPG_LIBS) $(PNG_LIBS) $(GIF_LFLAGS) $(GIF_LIBS) $(EPICLIB)
+
+%.o: %.c
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
+
+clean:
+	rm -f $(TARGET) $(OBJ)
+
+spotless: 
+	rm -rf $(TARGET) $(OBJ) config.status config.log configure autom4te.cache *~ Makefile
+
+lhash.o:	lhash.h
+ddspng.o:	ddspng.hh ddsimg.hh
+ddsgif.o:	ddsgif.hh ddsimg.hh
+ddsmpg.o:	ddsmpg.hh ddsimg.hh
+ddscomp.o:	lhash.h ddspng.hh ddsgif.hh

@@ -1,0 +1,285 @@
+//
+// Powerbox can testing
+//
+//
+library PowerBox {
+
+    const byte powerBoxSet    = 1;
+    const byte powerBoxGet    = 2;
+    const byte powerBoxNotify = 3;
+
+    CanDevice device;
+
+    // Channel info for storing values
+    type PowerBoxChannel {
+	unsigned       chan;      // channel id 0 - 8
+	event float    pwm;       // pwm value [0,200] => [0.0, 1.0]
+	event unsigned frequency; // frequency 
+	event float    an0;       // current   [0,1023] => [0,1.0] (0-+3.3v)
+	event float    an1;       // current   [0,1023] => [0,1.0] (0-+3.3v)
+	event float    an2;       // current   [0,1023] => [0,1.0] (0-+3.3v)
+	event bool     test;      // test value
+    };
+
+    type PowerBoxFrame : CanFrame {
+	event unsigned @CanFrame.length = 8;
+	unsigned       chan;      // own channel id 0 - 8
+    };
+
+    // CanFrame for SET commands
+    type PowerBoxSetFrame : PowerBoxFrame {
+	event unsigned @CanFrame.id = 0x1F;
+	event float    pwm;       // pwm
+	event unsigned frequency; // frequency
+	event byte     an0;       // set subscription
+	event byte     an1;       // set subscription
+	event byte     an2;       // set subscription
+
+	script pwm {
+	    unsigned value = @unsigned(pwm*200);
+	    unsigned cid = chan + 0x30;
+	    // printf("Sending SET pwm=%f chan=%d, cid=%x\n", pwm, chan, cid);
+	    data[0] = powerBoxSet;
+	    data[1] = 0;
+	    data[2] = (cid >> 8) & 0xff;
+	    data[3] = cid & 0xff;
+	    data[4] = (value >> 24) & 0xff;
+	    data[5] = (value >> 16) & 0xff;
+	    data[6] = (value >> 8) & 0xff;
+	    data[7] = value & 0xff;
+	    device.outputs = this;  // queue command
+	}
+
+	script frequency {
+	    unsigned value = frequency ? (15000000 / frequency) : 0;
+	    unsigned cid  = chan + 0x40;
+	    // printf("Sending SET freuency=%d, chan=%d\n", frequency, chan);
+	    data[0] = powerBoxSet;
+	    data[1] = 0;
+	    data[2] = (cid >> 8) & 0xff;
+	    data[3] = cid & 0xff;
+	    data[4] = (value >> 24) & 0xff;
+	    data[5] = (value >> 16) & 0xff;
+	    data[6] = (value >> 8) & 0xff;
+	    data[7] = value & 0xff;
+	    device.outputs = this;  // queue command
+	}
+
+	script an0 {
+	    unsigned cid  = 0x0111;
+	    // printf("Sending SET AN0 subscription=%d\n", an0);
+	    data[0] = powerBoxSet;
+	    data[1] = 0;
+	    data[2] = (cid >> 8) & 0xff;
+	    data[3] = cid & 0xff;
+	    data[4] = 0;
+	    data[5] = 0;
+	    data[6] = 0;
+	    data[7] = 0;
+	    device.outputs = this;  // queue command
+	}
+
+	script an1 {
+	    unsigned cid  = chan + 0x120;
+	    // printf("Sending SET AN1 subscription=%d, chan=%d\n", an1, chan);
+	    data[0] = powerBoxSet;
+	    data[1] = 0;
+	    data[2] = (cid >> 8) & 0xff;
+	    data[3] = cid & 0xff;
+	    data[4] = 0;
+	    data[5] = 0;
+	    data[6] = 0;
+	    data[7] = an1;
+	    device.outputs = this;  // queue command
+	}
+
+	script an2 {
+	    unsigned cid  = chan + 0x130;
+	    // printf("Sending SET AN2 subscription=%d, chan=%d\n", an2, chan);
+	    data[0] = powerBoxSet;
+	    data[1] = 0;
+	    data[2] = (cid >> 8) & 0xff;
+	    data[3] = cid & 0xff;
+	    data[4] = 0;
+	    data[5] = 0;
+	    data[6] = 0;
+	    data[7] = an2;
+	    device.outputs = this;  // queue command
+	}
+    };
+
+    type PowerBoxGetFrame : PowerBoxFrame {
+	event unsigned @CanFrame.id = 0x1F;
+	event float    pwm;       // pwm
+	event unsigned frequency; // frequency
+	event byte     an0;
+	event byte     an1;
+	event byte     an2;
+
+	script pwm {
+	    unsigned cid = chan + 0x30;
+	    // printf("Sending GET pwm chan=%d\n", chan);
+	    data[0] = powerBoxGet;
+	    data[1] = 0;
+	    data[2] = (cid >> 8) & 0xff;
+	    data[3] = cid & 0xff;
+	    data[4] = 0;
+	    data[5] = 0;
+	    data[6] = 0;
+	    data[7] = 0;
+	    device.outputs = this;  // queue command
+	}
+
+	script frequency {
+	    unsigned cid  = chan + 0x40;
+	    // printf("Sending GET freuency, chan=%d\n", chan);
+	    data[0] = powerBoxGet;
+	    data[1] = 0;
+	    data[2] = (cid >> 8) & 0xff;
+	    data[3] = cid & 0xff;
+	    data[4] = 0;
+	    data[5] = 0;
+	    data[6] = 0;
+	    data[7] = 0;
+	    device.outputs = this;  // queue command
+	}
+
+	script an0 {
+	    unsigned cid  = 0x0111;
+	    // printf("Sending GET AN0\n", chan);
+	    data[0] = powerBoxGet;
+	    data[1] = 0;
+	    data[2] = (cid >> 8) & 0xff;
+	    data[3] = cid & 0xff;
+	    data[4] = 0;
+	    data[5] = 0;
+	    data[6] = 0;
+	    data[7] = 0;
+	    device.outputs = this;  // queue command
+	}
+
+	script an1 {
+	    unsigned cid  = chan + 0x120;
+	    // printf("Sending GET AN1, chan=%d\n", chan);
+	    data[0] = powerBoxGet;
+	    data[1] = 0;
+	    data[2] = (cid >> 8) & 0xff;
+	    data[3] = cid & 0xff;
+	    data[4] = 0;
+	    data[5] = 0;
+	    data[6] = 0;
+	    data[7] = 0;
+	    device.outputs = this;  // queue command
+	}
+
+	script an2 {
+	    unsigned cid  = chan + 0x130;
+	    // printf("Sending GET AN2, chan=%d\n", chan);
+	    data[0] = powerBoxGet;
+	    data[1] = 0;
+	    data[2] = (cid >> 8) & 0xff;
+	    data[3] = cid & 0xff;
+	    data[4] = 0;
+	    data[5] = 0;
+	    data[6] = 0;
+	    data[7] = 0;
+	    device.outputs = this;  // queue command
+	}
+
+
+    };
+
+
+    PowerBoxChannel   cin[9];   // 0 is a test channel
+    PowerBoxSetFrame cset[9];  // issue set commands per channel
+    PowerBoxGetFrame cget[9];  // issue get commands per channel
+
+    // CanFrame for NOTIFY's
+    type PowerBoxNotify : PowerBoxFrame {
+	event unsigned @CanFrame.id = 0xF1;
+
+	script when data[0] ==  powerBoxNotify { // NOTIFY
+	    unsigned cid    = (data[2]<<8)|data[3];
+	    unsigned value = (data[4]<<24)|(data[5]<<16)|(data[6]<<8)|data[7];
+
+	    if ((cid >= 0x31) && (cid <= 0x38)) {
+		cid -= 0x30;
+		cin[cid].pwm = (value >= 0xC8) ? 1.0 : (value / 200.0);
+	    }
+	    else if ((cid >= 0x41) && (cid <= 0x48)) {
+		cid -= 0x40;
+		cin[cid].frequency = (value == 0) ? 0 : (15000000 / value);
+	    }
+	    else if ((cid >= 0x131) && (cid <= 0x138)) {
+		cid -= 0x130;
+		cin[cid].an2 = value / 1023.0;
+	    }
+	    else if ((cid >= 0x121) && (cid <= 0x128)) {
+		cid -= 0x120;
+		cin[cid].an1 = value / 1023.0;
+	    }
+	    else if (cid == 0x0111) {
+		cin[0].an0 = value / 1023.0;
+	    }
+	    else if (cid == 2) {
+		cin[0].frequency = value;  // should be 0x01020304
+		cin[0].test = true;
+	    }
+	    // printf("NOTIFY: POWERBOX: %p\n", this);
+	}
+
+	script when data[0] != powerBoxNotify {
+	    printf("NOTIFY: OTHER: %p\n", this);
+	}
+    };
+
+    PowerBoxNotify notify;
+
+    type PowerBoxTestFrame : PowerBoxGetFrame {
+	event bool test;
+
+	script test {
+	    data[0] = powerBoxGet;
+	    data[1] = 0;
+	    data[2] = 0;
+	    data[3] = 2;
+	    data[4] = 0;
+	    data[5] = 0;
+	    data[6] = 0;
+	    data[7] = 0;
+	    device.outputs = this;  // queue command
+	    printf("Sending TEST %p\n", this);
+	}
+    };
+
+    PowerBoxTestFrame ctest;
+
+    //
+    // Initialize the power box com
+    //
+    script PowerBox {
+	int i;
+	string devName;
+
+	if ((devName = getenv("M1_CANUSB_DEVICE")) == "") {
+	    devName = "/dev/tty.usbserial-LWQ6UYOM";
+	    // devName = "/dev/tty.usbserial-0000103D";
+	}	   
+
+	device = @CanUSBDevice { format = base,
+				 canSpeed  = 250,
+				 port      = devName,
+				 portSpeed = 230400
+	};
+
+	foreach i in [0:8] {
+	    cin[i]  = @PowerBoxChannel   { chan = i };
+	    cset[i] = @PowerBoxSetFrame  { chan = i };
+	    cget[i] = @PowerBoxGetFrame  { chan = i };
+	}
+
+	ctest   = @PowerBoxTestFrame {};
+	notify  = @PowerBoxNotify  {};
+	device.inputs  += notify;
+    };
+}

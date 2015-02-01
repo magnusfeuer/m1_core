@@ -1,0 +1,296 @@
+//
+// Magden style slider....
+//
+library Slider {
+
+Style button15 =
+      @Style { name = "button15",
+      	       backgroundColor = 0x000000,
+	       fontName  = "BankGothic Md BT",
+	       fontWeight = medium,
+	       fontSlant = roman,
+	       fontColor = 0xffffff,
+	       fontSize = 12,
+	       glyphFixedWidth = 8,
+	       glyphDotKerning = -3 };
+
+Style button31 =
+      @Style { name = "button31",
+      	       backgroundColor = 0x000000,
+	       fontName  = "BankGothic Md BT",
+	       fontWeight = medium,
+	       fontSlant = roman,
+	       fontColor = 0xffffff,
+	       fontSize = 28,
+	       glyphFixedWidth = 24,
+	       glyphDotKerning = -8 };
+
+type FloatValueButton : Layer {
+    public  bool  big = false;
+    public  event float value;
+    private Image left_but;
+    private Image right_but;
+    private Float mid_but;
+
+    script FloatValueButton {
+	int    sz          = big ? 31 : 15;
+	string buttonClass = big ? "button31" : "button15";
+
+	left_but = @Image { top = 0,
+			    left = 0,
+			    imageFile = sprintf("../images/left_hbutton_black_%d.png", sz)
+	};
+	mid_but = @Float { top = 0, height = sz,
+			   class = buttonClass,
+		  	   background = true,
+			   left <- left_but.contentWidth,
+			   format = "%.2f",
+			   value <- value
+	};
+	right_but = @Image { top = 0,
+			     left <- mid_but.left + mid_but.contentWidth,
+			     imageFile = sprintf("../images/right_hbutton_black_%d.png",sz)
+	};
+	width <- left_but.contentWidth + 
+	          mid_but.contentWidth + 
+	          right_but.contentWidth;
+	children = {left_but, mid_but, right_but};
+    }
+};
+
+// Vertical slider
+// width = 83
+// min height = 41 + 41 + 1 = 83
+// max height = 41 + 41 + 398 = 480
+//
+type VerticalTouch : Layer {
+     public event float value;
+     public float minValue = 0.0;
+     public float maxValue = 1.0;
+
+     private bool down;
+     private Image itop;
+     private Image ibot;
+     private Layer lmid;
+     private Image ibutton;
+     private ScalarInterpolator ypos;
+
+     script VerticalTouch {
+	 itop = @Image { imageFile = "../images/slider_top_bg.png" };
+	 lmid = @Layer {
+	     top = 41,
+	     width = 83,
+	     clip = true,
+	     children = {
+		 @Image { imageFile = "../images/slider_mid_bg.png" }
+	     }
+	 };
+	 ibot = @Image { imageFile = "../images/slider_bot_bg.png" };
+	 ibutton = @Image { imageFile = "../images/slider_button.png" };
+	 if (width != 83) width = 83;
+	 if (height < 83) height = 83;
+	 else if (height > 480) height = 480;
+
+	 ibutton.top = 2;
+	 ibutton.left = 2;
+	 lmid.height <- height - 82;
+	 ibot.top <- lmid.height + 41;
+	 ypos = @ScalarInterpolator { key={minValue,maxValue}, 
+				      keyValue={2, height-79}};
+	 ypos.fraction <- value;
+	 ibutton.top <- ypos.value;
+	 children = {itop, lmid, ibot, ibutton };
+	 messageMask = 0x0200; // buttons
+	 wantFocus = true;
+     }
+
+     script height {
+	 if (height < 83) height = 83;
+	 else if (height > 480) height = 480;
+	 ypos.keyValue[1] = height-79;
+	 value = value;
+     }
+
+     script width {
+	 width = 83;
+     }
+
+     script value {
+	 printf("value: %f\n", value);
+     }
+
+     script message when (message.name==buttonDown) && (message.value==1) {
+	 down = true;
+	 messageMask |= 0x1000;  // turn on motion events
+	 value = message.y / height;
+     }
+
+     script message when (message.name==buttonUp) && (message.value==1) {
+	 down = false;
+	 messageMask &= ~0x1000; // turn off motion events
+     }
+
+     script message when down && (message.name==motion) {
+	 value = message.y / height;
+     }
+};
+
+// Vertical slider with numeric footer label
+//
+type LabeledVerticalTouch : VerticalTouch {
+    public string   labelFontName  = "BankGothic Md BT";
+    public unsigned labelFontSize  = 12;
+    public unsigned labelFontColor = 0x0000FF;
+    private Float label;
+
+    script LabeledVerticalTouch {
+	label = @Float { left = 0,
+			 top  <- height,
+			 value <- value,
+      	       	      	 format="%.2f",
+            	         fontName = labelFontName,
+			 fontSize = labelFontSize,
+			 fontWeight = medium,
+			 fontSlant = roman,
+			 fontColor = labelFontColor };
+	children += label;
+    }
+};
+
+//
+// Vertical slider
+//
+
+type Vertical : Layer {
+     public event float value;
+     public float minValue = 0.0;
+     public float maxValue = 1.0;
+     public bool  big = false;
+
+     private bool down;
+     private FloatValueButton ibutton;
+     private Shape ruler;
+     private ScalarInterpolator ypos;
+     private event float yscale;
+
+     script Vertical {
+	 ibutton = @FloatValueButton { big = big, value <- value };
+	 ruler = @Shape { shape = rectangle,
+	       	 	  left  = (width / 2),
+			  contentHeight <- height,
+			  contentWidth = 3,
+			  fill = true,
+			  fillColor = 0xff000000 };
+	 ibutton.top  = 2;
+	 ibutton.left = -((ibutton.width-width) / 2);
+	 yscale <- height - ibutton.height,
+	 ypos = @ScalarInterpolator { key={minValue,maxValue}, 
+				      keyValue={2, yscale}};
+
+	 ypos.fraction <- value;
+	 ibutton.top <- ypos.value;
+	 children = {ruler, ibutton };
+	 messageMask = 0x0200; // buttons
+	 wantFocus = true;
+	 printf(":Slider:Vertical\n");
+	 // DEBUG
+	 // backgroundColor = 0xCCCCCC;
+	 // background = true;
+     }
+
+     script height {
+	 if (height < 50) height = 50;
+	 else if (height > 480) width = 480;
+	 printf("IButton height = %f\n", ibutton.height);
+	 value = value;
+     }
+
+     script yscale {  ypos.keyValue[1] = yscale;  }
+
+
+     script width {  }
+
+     script value { printf("value: %f\n", value);  }
+
+     script message when (message.name == buttonDown) && (message.value == 1) {
+	 down = true;
+	 messageMask |= 0x1000;  // turn on motion events
+	 value = message.y / height;
+     }
+
+     script message when (message.name == buttonUp) && (message.value == 1) {
+	 down = false;
+	 messageMask &= ~0x1000; // turn off motion events
+     }
+
+     script message when down && (message.name == motion) {
+	 value = message.y / height;
+     }
+};
+
+
+
+type Horizontal : Layer {
+     public event float value;
+     public float minValue = 0.0;
+     public float maxValue = 1.0;
+     public bool  big = false;
+
+     private bool down;
+     private FloatValueButton ibutton;
+     private Shape ruler;
+     private ScalarInterpolator xpos;
+     private event float xscale;
+
+     script Horizontal {
+	 ruler = @Shape { shape = rectangle,
+	       	 	  top = height / 2,
+			  contentWidth <- width,
+			  contentHeight = 3,
+			  fill = true,
+			  fillColor = 0xff000000 };
+	 ibutton = @FloatValueButton { big = big, value <- value };
+	 ibutton.top  = 2;
+	 ibutton.left = 2;
+	 xscale <- width - ibutton.width;
+	 xpos = @ScalarInterpolator { key={minValue,maxValue}, 
+				      keyValue={2, xscale}};
+	 xpos.fraction <- value;
+	 ibutton.left <- xpos.value;
+	 children = {ruler, ibutton };
+	 messageMask = 0x0200; // buttons
+	 wantFocus = true;
+     }
+
+     script width {
+	 if (width < 50) width = 50;
+	 else if (width > 640) width = 640;
+	 printf("IButton width = %f\n", ibutton.width);
+	 value = value;
+     }
+
+     script xscale { xpos.keyValue[1] = xscale;  }
+
+     script height {  }
+
+     script value { printf("value: %f\n", value); }
+
+     script message when (message.name == buttonDown) && (message.value == 1) {
+	 down = true;
+	 messageMask |= 0x1000;  // turn on motion events
+	 value = message.x / width;
+     }
+
+     script message when (message.name == buttonUp) && (message.value == 1) {
+	 down = false;
+	 messageMask &= ~0x1000; // turn off motion events
+     }
+
+     script message when down && (message.name == motion) {
+	 value = message.x / width;
+     }
+};
+
+
+
+}

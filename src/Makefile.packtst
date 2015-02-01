@@ -1,0 +1,11 @@
+#
+# Temporary makefile to test out packfiles
+#
+
+CXXFLAGS=-g -I../include -DSTANDALONE=1
+
+packtst: packtst.o packfile.o
+	 g++ -g -o  packtst packtst.o packfile.o
+
+clean: 
+	rm -f packtst packtst.o
