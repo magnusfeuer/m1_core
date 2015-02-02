@@ -252,11 +252,19 @@ m1_typeinfo:
 
 
 
-rtlib: 
+rtlib:  ../obj
 	$(MAKE) TYPE=drm ../obj/drm/m1rt.a
 	$(MAKE) TYPE=release ../obj/release/m1rt.a
 	$(MAKE) TYPE=debug ../obj/debug/m1rt.a
 
+../obj:
+	mkdir -p ../obj/drm
+	mkdir -p ../obj/release
+	mkdir -p ../obj/debug
+	mkdir -p ../epic/obj/debug
+	mkdir -p ../epic/obj/release
+	mkdir -p ../epic/lib/debug
+	mkdir -p ../epic/lib/release
 #
 # Clean both debug and release object dirs.
 #
