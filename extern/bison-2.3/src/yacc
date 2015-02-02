@@ -1,2 +1,0 @@
-#! /bin/sh
-exec /home/m1/magden/dist/jway/1.1.0b/core/extern/bin/bison -y "$@"
