@@ -54,4 +54,4 @@ ifeq ($(OSNAME), Darwin)
 endif
 
 clean:
-	rm -rf lib include ssl bin ffmpeg openssl-0.9.8e
+	rm -rf lib include ssl bin ffmpeg openssl-0.9.8e bison-2.3
