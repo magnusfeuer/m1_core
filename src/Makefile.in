@@ -334,7 +334,7 @@ $(OBJDIR)/m1_parse.o:	m1_parse.cc ../include/m1.hh ../include/m1vm.hh ../include
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 m1_parse.cc m1_parse.hh:	m1.y
-	bison -S ./lalr1pp.cc -v -d -pm1_ -om1_parse.cc m1.y
+	../extern/bin/bison -S ./lalr1pp.cc -v -d -pm1_ -om1_parse.cc m1.y
 
 -include depend.mk
 
