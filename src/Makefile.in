@@ -197,7 +197,7 @@ COMMON_CFLAGS=-DVERSION=\"$(VERSION)\" -Wall -I../extern/include  @FFMPEG_INCLUD
 # combined compile flags
 CXXFLAGS:= $(COMMON_CFLAGS) $(COMPILE_FLAGS) $(OS_CFLAGS) $(CFLAGS)
 
-LIBS = -L../extern/lib $(FFMPEG_LIB) $(OPENSSL_LIB)  $(X11_LIB) $(CARBON_LIB) $(EPIC_LIB) $(PNG_LFLAGS) $(JPEG_LFLAGS) $(JPEG_LIBS)  -lm -ldl -lz
+LIBS = -L../extern/lib $(FFMPEG_LIB) $(OPENSSL_LIB)  $(CARBON_LIB) $(EPIC_LIB) $(PNG_LFLAGS) $(JPEG_LFLAGS) $(JPEG_LIBS) $(X11_LIB)  -lm -ldl -lz
 #
 # Debug entry points (default)
 #
@@ -277,7 +277,7 @@ m1e_target:	$(M1E_TARGET)
 
 
 $(M1E_TARGET):	$(EPIC_LIB) $(RT_LIB) $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1E_OBJ)
-	$(CXX) $(LDFLAGS) -o $@ $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1E_OBJ) $(RT_LIB) $(LIBS)
+	$(CXX)  -o $@ $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1E_OBJ) $(RT_LIB) $(LIBS) $(LDFLAGS)
 ifneq "$(UNAME)" "Darwin"
 ifneq "$(TYPE)" "debug"
 ifneq "$(TYPE)" "prof"
@@ -290,7 +290,7 @@ endif
 m1c_target:	$(M1C_TARGET)
 
 $(M1C_TARGET):	$(RT_LIB) $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1C_OBJ)
-	$(CXX) $(LDFLAGS) -o $@ $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1C_OBJ) $(RT_LIB) $(LIBS)
+	$(CXX)  -o $@ $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1C_OBJ) $(RT_LIB) $(LIBS) $(LDFLAGS)
 ifneq "$(UNAME)" "Darwin"
 ifneq "$(TYPE)" "debug"
 ifneq "$(TYPE)" "prof"
@@ -302,7 +302,7 @@ endif
 m1_typeinfo_target:	$(M1_TYPEINFO_TARGET)
 
 $(M1_TYPEINFO_TARGET):	$(RT_LIB) $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1_TYPEINFO_OBJ)
-	$(CXX) $(LDFLAGS) -o $@  $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1_TYPEINFO_OBJ) $(RT_LIB) $(LIBS)
+	$(CXX) -o $@  $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1_TYPEINFO_OBJ) $(RT_LIB) $(LIBS)  $(LDFLAGS) 
 ifneq "$(UNAME)" "Darwin"
 ifneq "$(TYPE)" "debug"
 	strip $@
@@ -312,7 +312,7 @@ endif
 m1t_target:	$(M1VM_TEST_TARGET)
 
 $(M1VM_TEST_TARGET):	$(RT_LIB) $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1VM_TEST_OBJ)
-	$(CXX) $(LDFLAGS) -o $@ $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1VM_TEST_OBJ) $(RT_LIB) $(LIBS)
+	$(CXX)  -o $@ $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1VM_TEST_OBJ) $(RT_LIB) $(LIBS) $(LDFLAGS)
 ifneq "$(UNAME)" "Darwin"
 ifneq "$(TYPE)" "debug"
 	strip $@
