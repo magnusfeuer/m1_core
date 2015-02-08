@@ -1,4 +1,4 @@
-/* /home/m1/git/core/include/config.h.  Generated from config.h.in by configure.  */
+/* /home/m1/git/m1/core/include/config.h.  Generated from config.h.in by configure.  */
 
 /* If using ffmepg */
 /* #undef USE_FFMPEG */
