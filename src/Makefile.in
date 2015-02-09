@@ -34,7 +34,7 @@ PNG_LIBS   := $(shell libpng-config --libs)
 PNG_LFLAGS := $(shell libpng-config --ldflags)
 
 GIF_CFLAGS := -I@LIBUNGIF_DIR@/include
-GIF_LIBS   := -lungif
+GIF_LIBS   := -lgif
 GIF_LFLAGS := -L@LIBUNGIF_DIR@/lib
 
 # MOVE TO configure.ac
