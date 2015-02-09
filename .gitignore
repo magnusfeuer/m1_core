@@ -43,6 +43,7 @@ src/location.hh
 src/m1_parse.cc
 src/m1_parse.hh
 src/stack.hh
+tools/ddscomp/Makefile
 tools/efnttool/bin
 tools/efnttool/freetype-2.3.5
 tools/efnttool/include
