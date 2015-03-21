@@ -16,7 +16,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
-#include <asm/mtrr.h>
+// #include <asm/mtrr.h>
 #include <strings.h>
 
 typedef u_int8_t u8;
@@ -923,7 +923,7 @@ static int fb_win_attach(EBackend* backend, EWindow* ewin)
     unsigned char alpha_first;
     unsigned char rgb; /* color order RGB or BGR? */
     unsigned int  pt;  /* pixel type for screen */
-    struct mtrr_sentry sentry;
+    //    struct mtrr_sentry sentry;
     FbBackend* be = (FbBackend*) backend;
     FbWindow*  nwin;
     
@@ -979,6 +979,8 @@ static int fb_win_attach(EBackend* backend, EWindow* ewin)
     }
 
     /* Setup MTRR */
+    be->mtrr_fd = -1;
+    /*
     if ((be->mtrr_fd = open("/proc/mtrr", O_WRONLY, 0)) == -1) 
     {
 	if (errno == ENOENT) {
@@ -998,6 +1000,7 @@ static int fb_win_attach(EBackend* backend, EWindow* ewin)
 	close(be->mtrr_fd);
 	be->mtrr_fd = -1;
     }
+    */
 
     //
     // Pan to the beginning of things.
