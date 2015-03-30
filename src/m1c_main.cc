@@ -6,7 +6,7 @@
 #include <openssl/bio.h>
 
 #include "m1c.hh"
-#include "epic.h"
+#include "epx.h"
 #include "m1_parser.hh"
 #include "key.hh"
 #include <unistd.h>
@@ -134,8 +134,8 @@ int main(int argc, char** argv)
     lib_path[il] = NULL;
 
     m1_init(lib_path);
-    epic_debug(0);
-    epic_init(EPIC_SIMD_AUTO);
+    epx_set_debug(0);
+    epx_init(EPX_SIMD_AUTO);
 
     // A dummy machine type for initialization of instructions
     new VmMachineType(T_TYPE);  

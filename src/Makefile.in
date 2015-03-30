@@ -169,7 +169,7 @@ OS_CFLAGS= -DDARWIN=1  -I/opt/local/include -mdynamic-no-pic
 LDFLAGS:=-Wl,-search_paths_first -sectcreate __TEXT __info_plist m1.plist
 else
 OS_CFLAGS= -rdynamic
-LDFLAGS:=-rdynamic -lpthread
+LDFLAGS:=-lGL -rdynamic -lpthread
 endif
 
 
