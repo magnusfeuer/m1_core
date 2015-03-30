@@ -393,13 +393,16 @@ void CScreenComponent::enterGraphicsMode(CExecutor* aExec)
     if ((mBackendType.value()) == "auto") {
 	int i = 0;
 	while((name = epx_backend_name(i)) != NULL) {
-	    if ((mBackend = epx_backend_create((char *)name, param)) != NULL)
+	    if ((mBackend = epx_backend_create((char *)name, param)) != NULL) {
+		printf("Backend auto determined to: %s\n", name);
 		break;
+	    }
 	    i++;
 	}
     }
     else {
 	name = (char*) mBackendType.value().c_str();
+	printf("Backend specified as: %s\n", name);
 	mBackend = epx_backend_create((char *) name, param);
     }
 
