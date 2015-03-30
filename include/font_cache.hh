@@ -9,7 +9,7 @@
 
 #include <math.h>
 #include "m1.hh"
-#include "epic.h"
+#include "epx.h"
 
 #define PT_INCH  0.013889  // Points to inch
 #define PT_MM    0.352781  // Points to mm
@@ -18,12 +18,12 @@
 
 class CFont : public CRuntime {
 public:
-    CFont(EFont* aFont) {
+    CFont(epx_font_t* aFont) {
 	mLastUsed = 0;
 	mPermanent = false;
 	mFont = aFont;
     }
-    ~CFont(void) { EFontDestroy(mFont);  }
+    ~CFont(void) { epx_font_destroy(mFont);  }
 
     string debugName(void);
 
@@ -44,24 +44,24 @@ public:
     }
 
     //! unmap font file (temporarily)
-    void unmap() { if (mFont && EFontIsMapped(mFont)) EFontUnmap(mFont); }
+    void unmap() { if (mFont && epx_font_is_mapped(mFont)) epx_font_unmap(mFont); }
 
     //! (re)map an unmapped file
-    void map()   { if (mFont && !EFontIsMapped(mFont)) EFontMap(mFont); }
+    void map()   { if (mFont && !epx_font_is_mapped(mFont)) epx_font_map(mFont); }
 
     //! mark that the font is in use
     void use(TimeStamp aTimeStamp) { map(); mLastUsed = aTimeStamp; }
 
-    EFont* epicFont(void) { return mFont; }
+    epx_font_t* epxFont(void) { return mFont; }
 
     //! Match a font
     bool match(int aResolution, string aName,int aSize,
-	       EFontWeight aWeight,EFontSlant aSlant);
+	       epx_font_weight_t aWeight, epx_font_slant_t aSlant);
 
 private:
     TimeStamp mLastUsed;   // Mark time when font entry was last used
     bool   mPermanent;    // Make sure it's not onloaded
-    EFont* mFont;         // The EPIC font structure 
+    epx_font_t* mFont;         // The EPX font structure 
 };
 
 typedef list<CFont*> CFontList;
@@ -103,7 +103,7 @@ public:
 
     // Find first matching font
     CFont* match(int aResolution,string aName,int aSize,
-		 EFontWeight aWeight,EFontSlant aSlant);
+		 epx_font_weight_t aWeight, epx_font_slant_t aSlant);
 
 private:
     void loadFonts(string aPath);

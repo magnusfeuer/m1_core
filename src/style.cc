@@ -17,7 +17,7 @@ static CStyle* create_style(CExecutor* aExec, string aName)
     style = m1New(CStyle,aExec,CStyle::CStyleType::singleton());
     if (aName != "")
 	style->put(aExec,"name",  UString(m1New(CString, aName)));
-    style->put(aExec,"fontName",  UString(m1New(CString, "Helvetica")));
+    style->put(aExec,"fontName",  UString(m1New(CString, (char*) "Helvetica")));
     style->put(aExec,"fontSize",  UUnsigned(12));
     style->start(aExec);
     return style;    
@@ -312,7 +312,7 @@ CStyle::CStyle(CExecutor* aExec,CBaseType *aType) :
     useStructureChanged();   // Create the special event.
 
     mFont = NULL;
-    EGcInit(&mGC);
+    epx_gc_init(&mGC);
 
     mName.putValue(aExec, "");                     // default to unnamed
     mForegroundColor.putValue(aExec, 0xffffff);    // white
@@ -324,8 +324,8 @@ CStyle::CStyle(CExecutor* aExec,CBaseType *aType) :
     mBorderWidth.putValue(aExec, 0);
     mFontName.putValue(aExec, "Helvetica");
     mFontSize.putValue(aExec, 12);
-    mFontWeight.putValue(aExec, EFONT_WEIGHT_BOLD);
-    mFontSlant.putValue(aExec,  EFONT_SLANT_ROMAN);
+    mFontWeight.putValue(aExec, EPX_FONT_WEIGHT_BOLD);
+    mFontSlant.putValue(aExec,  EPX_FONT_SLANT_ROMAN);
     mGlyphDeltaX.putValue(aExec, 0);
     mGlyphDeltaY.putValue(aExec, 0);
     mGlyphDotKerning.putValue(aExec, 0);
@@ -416,75 +416,75 @@ bool CStyle::update(CExecutor* aExec, bool aStart)
     if (update) {
 	loadFont(resolution(m1_default_screen()));
 	if (mFont)
-	    EGcSetFont(&mGC, mFont->epicFont());
+	    epx_gc_set_font(&mGC, mFont->epxFont());
 	update = true;
     }
 
     if (mGlyphDeltaX.assigned()||mGlyphDeltaY.assigned()) {
-	EGcSetGlyphDelta(&mGC, mGlyphDeltaX.value(), mGlyphDeltaY.value());
+	epx_gc_set_glyph_delta(&mGC, mGlyphDeltaX.value(), mGlyphDeltaY.value());
 	update = true;
     }
 
     if (mGlyphDotKerning.assigned()) {
-	EGcSetGlyphDotKern(&mGC, mGlyphDotKerning.value());
+	epx_gc_set_glyph_dot_kern(&mGC, mGlyphDotKerning.value());
 	update = true;
     }
 
     if (mGlyphFixedWidth.assigned()) {
-	EGcSetGlyphWidth(&mGC, mGlyphFixedWidth.value());
+	epx_gc_set_glyph_fixed_width(&mGC, mGlyphFixedWidth.value());
 	update = true;
     }
 
     if (mFill.assigned()) {
 	if (mFill.value())
-	    EGcSetFillStyle(&mGC, EPIC_FILL_STYLE_BLEND|EPIC_FILL_STYLE_AALIAS);
+	    epx_gc_set_fill_style(&mGC, EPX_FILL_STYLE_BLEND|EPX_FILL_STYLE_AALIAS);
 	else
-	    EGcSetFillStyle(&mGC, EPIC_FILL_STYLE_NONE);
+	    epx_gc_set_fill_style(&mGC, EPX_FILL_STYLE_NONE);
 	if (aStart) mFill.cancel(aExec);
 	update = true;
     }
 
     if (mForegroundColor.assigned()) {
-	EPixel_t color;
+	epx_pixel_t color;
 	color.px = mForegroundColor.value();
 	color.a  = 255; // FIXME
-	EGcSetForegroundColor(&mGC, color);
+	epx_gc_set_foreground_color(&mGC, color);
 	if (aStart) mForegroundColor.cancel(aExec);
 	update = true;
     }
 
     if (mFontColor.assigned()) {
-	EPixel_t color;
+	epx_pixel_t color;
 	color.px = mFontColor.value();
 	color.a  = 0; // FIXME
-	EGcSetForegroundColor(&mGC, color);
+	epx_gc_set_foreground_color(&mGC, color);
 	if (aStart) mFontColor.cancel(aExec);
 	update = true;
     }
 
     if (mBackgroundColor.assigned()) {
-	EPixel_t color;
+	epx_pixel_t color;
 	color.px = mBackgroundColor.value();
 	color.a  = 255; // FIXME
-	EGcSetBackgroundColor(&mGC, color);
+	epx_gc_set_background_color(&mGC, color);
 	if (aStart) mBackgroundColor.cancel(aExec);
 	update = true;
     }
 
     if (mBorderColor.assigned()) {
-	EPixel_t color;
+	epx_pixel_t color;
 	color.px = mBorderColor.value();
 	color.a  = 255; // FIXME
-	EGcSetBorderColor(&mGC, color);
+	epx_gc_set_border_color(&mGC, color);
 	if (aStart) mBorderColor.cancel(aExec);
 	update = true;
     }
 
     if (mFillColor.assigned()) {
-	EPixel_t color;
+	epx_pixel_t color;
 	color.px = mFillColor.value();
 	color.a  = 255; // FIXME
-	EGcSetFillColor(&mGC, color);
+	epx_gc_set_fill_color(&mGC, color);
 	if (aStart) mFillColor.cancel(aExec);
 	update = true;
     }

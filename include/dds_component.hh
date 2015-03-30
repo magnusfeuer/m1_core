@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <list>
 
-#include "epic.h"
+#include "epx.h"
 #include "dds_common.h"
 
 

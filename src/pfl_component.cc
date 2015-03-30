@@ -72,8 +72,8 @@ CPacketComponent::CPacketComponent(CExecutor* aExec, CBaseType *aType) :
     put(aExec, XINDEX(CPacketComponent,wrongTarget),
 	UArray(new CArray(aExec, CArrayType::create(string_type(), 0), sizeof(CString *), 0)));
 
-    put(aExec, XINDEX(CPacketComponent,root), UString(m1New(CString, "/")));
-    put(aExec, XINDEX(CPacketComponent,dbDirectory), UString(m1New(CString, "/m1/install_db")));
+    put(aExec, XINDEX(CPacketComponent,root), UString(m1New(CString, (char*) "/")));
+    put(aExec, XINDEX(CPacketComponent,dbDirectory), UString(m1New(CString, (char*) "/m1/install_db")));
 
     mFifoSource = m1New(CFileSource, aExec);
     m1Retain(CFileSource, mFifoSource);
@@ -430,7 +430,7 @@ CPacketInfoComponent::CPacketInfoComponent(CExecutor* aExec, CBaseType *aType) :
 	XINDEX(CPacketInfoComponent,packets),
 	UArray(new CArray(aExec, CArrayType::create(string_type(), 0), sizeof(CString *), 0)));
 
-    put(aExec, XINDEX(CPacketInfoComponent,serial), UString(m1New(CString, "")));
+    put(aExec, XINDEX(CPacketInfoComponent,serial), UString(m1New(CString, (char*) "")));
 }
 
 CPacketInfoComponent::~CPacketInfoComponent(void)

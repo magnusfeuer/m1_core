@@ -8,7 +8,7 @@
 #include "dds_component.hh"
 
 
-#include "epic.h"
+#include "epx.h"
 #include <math.h> // for nearbyintf() rounding function. Link with -m.
 
 XOBJECT_TYPE_BOOTSTRAP(CDDSComponent);
@@ -106,52 +106,53 @@ void CDDSComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
     }
 
     if (needScale(aContext) && canScale(aContext)) {
-	EPixmap*  sImage;    // source image
-	EPixmap*  dImage;    // destination image
+	epx_pixmap_t*  sImage;    // source image
+	epx_pixmap_t*  dImage;    // destination image
 
 	// Render dds in temoprary image
-	if ((sImage = EPixmapCreate(mDDS->width(),mDDS->height(),
-				    EPIXEL_TYPE_RGBA)) == NULL)
+	if ((sImage = epx_pixmap_create(mDDS->width(),mDDS->height(),
+					EPX_FORMAT_RGBA)) == NULL)
 	    goto unscaled;
 	    
 	// Draw DDS into new pixmap
-	EPixmapFill(sImage, epixel_transparent());
+	epx_pixmap_fill(sImage, epx_pixel_transparent);
 
-	EAnimCopyFrame(aContext->mGc, sImage, 0, 0,
-		       mDDS->width(), mDDS->height(),
-		       mDDS->pixelType(),
-		       (EAnimPixels*)(mDDS->pixmap(0)),
-		       (EAnimPixels*)(mDDS->pixmap(mCurrentFrame)));
+	epx_anim_copy_frame(sImage, aContext->mGc, 
+			    0, 0,
+			    mDDS->width(), mDDS->height(),
+			    mDDS->pixelType(),
+			    (epx_anim_pixels_t*)(mDDS->pixmap(0)),
+			    (epx_anim_pixels_t*)(mDDS->pixmap(mCurrentFrame)));
 
 	// Create the destination image
-	if ((dImage = EPixmapCreate(int(aContext->cWidth),
-				    int(aContext->cHeight),
-				    aContext->mPixmap->pixelType)) == NULL) {
-	    EPixmapDestroy(sImage);
+	if ((dImage = epx_pixmap_create(int(aContext->cWidth),
+					int(aContext->cHeight),
+					aContext->mPixmap->pixel_format)) == NULL) {
+	    epx_pixmap_destroy(sImage);
 	    goto unscaled;
 	}
 
 	// Scale the image & alpha channel
 	scaleImage(sImage, dImage, true);
 
-	EPixmapFadeArea(dImage, aContext->mPixmap,
-			aContext->mGc->fader_value,
-			0, 0,
-			int(aContext->lLeft),
-			int(aContext->lTop),
-			dImage->width, dImage->height);
-	EPixmapDestroy(sImage);
-	EPixmapDestroy(dImage);
+	epx_pixmap_fade_area(dImage, aContext->mPixmap,
+			     aContext->mGc->fader_value,
+			     0, 0,
+			     int(aContext->lLeft),
+			     int(aContext->lTop),
+			     dImage->width, dImage->height);
+	epx_pixmap_destroy(sImage);
+	epx_pixmap_destroy(dImage);
 	return;
     }
 
 unscaled:
-    EAnimDrawFrame(aContext->mGc, aContext->mPixmap,
-		   int(aContext->lLeft), int(aContext->lTop),
-		   mDDS->width(), mDDS->height(),
- 		   mDDS->pixelType(),
-		   (EAnimPixels*)(mDDS->pixmap(0)),
-		   (EAnimPixels*)(mDDS->pixmap(mCurrentFrame)));
+    epx_anim_draw_frame(aContext->mPixmap, aContext->mGc, 
+			int(aContext->lLeft), int(aContext->lTop),
+			mDDS->width(), mDDS->height(),
+			mDDS->pixelType(),
+			(epx_anim_pixels_t*)(mDDS->pixmap(0)),
+			(epx_anim_pixels_t*)(mDDS->pixmap(mCurrentFrame)));
 }
 
 

@@ -91,8 +91,8 @@ protected:
     // This may go since we have styles
     EventString mFontName;
     EventUnsigned mFontSize;
-    EventEnum<EFontWeight> mFontWeight;
-    EventEnum<EFontSlant> mFontSlant;
+    EventEnum<epx_font_weight_t> mFontWeight;
+    EventEnum<epx_font_slant_t> mFontSlant;
     EventUnsigned mFontColor;
     EventSigned   mGlyphDeltaX;      // fixed kerning
     EventSigned   mGlyphDeltaY;      // fixed kerning

@@ -151,7 +151,7 @@ static int decrypt_pubkey(unsigned char* pubkey_buf, int pubkey_buf_len,
     unsigned int iv_len;
     unsigned char dec_buf[KEY_PATCH_AREA_SIZE];
     int dec_len;
-    unsigned char* dec_ptr;
+//    unsigned char* dec_ptr; Commented out by magnus 2015-03-29 since it is not used.
     int key_offs;
     int outl;
     int pubkey_len;
@@ -179,7 +179,7 @@ static int decrypt_pubkey(unsigned char* pubkey_buf, int pubkey_buf_len,
     memcpy(iv_buf,  md_buf+key_len, iv_len);
 
     // Encrypt the enc_buf 
-    dec_ptr = dec_buf;
+//    dec_ptr = dec_buf; Commented out by magnus 2015-03-29 since it is not used.
     dec_len = 0;
     EVP_DecryptInit(&cipher_ctx, crypto, key_buf, iv_buf);
     // Disable padding!

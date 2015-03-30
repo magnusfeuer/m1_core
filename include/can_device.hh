@@ -9,7 +9,7 @@
 
 #include "m1.hh"
 
-typedef enum {
+enum {
     CAN_BASE_FRAME_FORMAT = 1,
     CAN_EXTENDED_FRAME_FORMAT = 2
 };
@@ -19,7 +19,7 @@ ENUM_TYPE(CCanFrameFormat, "CanFrameFormat",
 	  ENUMERATION(exteded,  CAN_EXTENDED_FRAME_FORMAT)
     );
 
-typedef enum {
+enum {
     CAN_DEVICE_STATE_NONE   = 0,  // none
     CAN_DEVICE_STATE_NODEV  = 1,  // could not open device, or no support
     CAN_DEVICE_STATE_INIT   = 2,  // initialize

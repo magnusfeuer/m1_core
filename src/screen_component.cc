@@ -48,7 +48,7 @@ CScreenComponent::CScreenComponent(CExecutor* aExec, CBaseType *aType) :
     mBackend(0),
     mWindow(0),
     mBackendType(this),
-    mPixelType(EPIXEL_TYPE_RGBA),
+    mPixelType(EPX_FORMAT_RGBA),
     mPixelTypeString(this),
     mBytesPerPixel(0),
     mBytesPerLine(0),
@@ -92,7 +92,7 @@ CScreenComponent::CScreenComponent(CExecutor* aExec, CBaseType *aType) :
     mWidth2(this),
     mRefresh(this),
     mRefresh2(this),
-    mPixelType2(EPIXEL_TYPE_RGBA),
+    mPixelType2(EPX_FORMAT_RGBA),
     mPixelTypeString2(this),
     mRecorder(this)
 {
@@ -104,7 +104,7 @@ CScreenComponent::CScreenComponent(CExecutor* aExec, CBaseType *aType) :
     mLastTime  = aExec->timeStamp();
     mDoubleBuffer.putValue(aExec,  true);
     mThreaded.putValue(aExec, false);
-    for (i = 0; i < EPIC_BUFFERS; i++)
+    for (i = 0; i < EPX_BUFFERS; i++)
 	mBuffer[i] = NULL;
     mRedrawCount = 0UL;
     mRedrawTime  = 0ULL;
@@ -208,7 +208,7 @@ int CScreenComponent::resolution_y(void)
 void CScreenComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
 {
     CRedrawContext context;
-    EGc gc;
+    epx_gc_t gc;
     TimeStamp thisTime;
 
     // If not in graphics mode then skip
@@ -233,7 +233,7 @@ void CScreenComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
     if (mThread)
 	EThreadSwap(mThread, mWindow);
     else
-	EWindowSwap(mWindow);
+	epx_window_swap(mWindow);
 
     mLastTime = thisTime;
     if (!mStatTime) mStatTime = thisTime;
@@ -247,17 +247,17 @@ void CScreenComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
 	modifyContext(context); // Will intersect clip also.
     }
     else {
-	EGcInit(&gc);
+	epx_gc_init(&gc);
 	initContext(context, &gc);
 	context.mPixmap = mBuffer[curBuf];
 	intersectClip(context);
     }
 
     if (background()) {
-	EPixel_t color;
+	epx_pixel_t color;
 	color.px = mBackgroundColor.value();
 	color.a = 255;  // FIXME?
-	EPixmapFill(context.mPixmap, color);
+	epx_pixmap_fill(context.mPixmap, color);
     }
 
     CLayerComponent::redrawChildren(aSys, &context);
@@ -294,80 +294,84 @@ void CScreenComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
 	// curBuf = (curBuf + 1) % EPIC_BUFFERS;
     }
     else
-	EPixmapDrawWindow(context.mPixmap, mWindow, true,
-			  int(context.lLeft), int(context.lTop),
-			  0, 0, 
-			  context.mPixmap->width, context.mPixmap->height);
+	epx_backend_pixmap_draw(context.mPixmap->backend, 
+				context.mPixmap, 
+				mWindow, 
+#warning "TONY FIXME: OffScreen flag did not carry over from EBacmendPixmapDraw to epx_backend_pixmap_draw"
+//				true,
+				int(context.lLeft), int(context.lTop),
+				0, 0, 
+				context.mPixmap->width, context.mPixmap->height);
 }
 
-void CScreenComponent::setupEpicParam(EDict *aParam)
+void CScreenComponent::setupEpxParam(epx_dict_t *aParam)
 {
-    EDictSetString(aParam, "framebuffer_device", (char*) mFrameBufferDevice.value().c_str());
-    EDictSetString(aParam, "active_device", (char*) mActiveDevice.value().c_str());
-    EDictSetInteger(aParam,"height", curHeight);
-    EDictSetInteger(aParam,"width",  curWidth);
-    EDictSetInteger(aParam,"pixclock", mPixClock.value());
-    EDictSetInteger(aParam,"left_margin", mLeftMargin.value());
-    EDictSetInteger(aParam,"right_margin", mRightMargin.value());
-    EDictSetInteger(aParam,"upper_margin", mUpperMargin.value());
-    EDictSetInteger(aParam,"lower_margin", mLowerMargin.value());
-    EDictSetInteger(aParam,"hsync_len", mHsyncLen.value());
-    EDictSetInteger(aParam,"vsync_len",  mVsyncLen.value());
-    EDictSetInteger(aParam,"sync", mSync.value());
-    EDictSetInteger(aParam,"vmode", mVmode.value());
-    EDictSetInteger(aParam,"double_buffer", mDoubleBuffer.value());
-    EDictSetInteger(aParam, "pixel_type", mPixelType);
+    epx_dict_set_string(aParam,(char*) "framebuffer_device", (char*) mFrameBufferDevice.value().c_str());
+    epx_dict_set_string(aParam, (char*) "active_device", (char*) mActiveDevice.value().c_str());
+    epx_dict_set_integer(aParam, (char*)"height", curHeight);
+    epx_dict_set_integer(aParam, (char*)"width",  curWidth);
+    epx_dict_set_integer(aParam, (char*)"pixclock", mPixClock.value());
+    epx_dict_set_integer(aParam, (char*)"left_margin", mLeftMargin.value());
+    epx_dict_set_integer(aParam, (char*)"right_margin", mRightMargin.value());
+    epx_dict_set_integer(aParam, (char*)"upper_margin", mUpperMargin.value());
+    epx_dict_set_integer(aParam, (char*)"lower_margin", mLowerMargin.value());
+    epx_dict_set_integer(aParam, (char*)"hsync_len", mHsyncLen.value());
+    epx_dict_set_integer(aParam, (char*)"vsync_len",  mVsyncLen.value());
+    epx_dict_set_integer(aParam, (char*)"sync", mSync.value());
+    epx_dict_set_integer(aParam, (char*)"vmode", mVmode.value());
+    epx_dict_set_integer(aParam, (char*)"double_buffer", mDoubleBuffer.value());
+    epx_dict_set_integer(aParam, (char*) "pixel_type", mPixelType);
 
     if (mTvSystem.assigned())
-	EDictSetString(aParam, "tv_system", (char *) mTvSystem.value().c_str());
+	epx_dict_set_string(aParam, (char*) "tv_system", (char *) mTvSystem.value().c_str());
     if (mTvOutputSignal.assigned())
-	EDictSetString(aParam, "tv_output_signal", (char *) mTvOutputSignal.value().c_str());
+	epx_dict_set_string(aParam, (char*) "tv_output_signal", (char *) mTvOutputSignal.value().c_str());
     if (mTvScan.assigned())
-	EDictSetString(aParam, "tv_scan", (char *) mTvScan.value().c_str());
+	epx_dict_set_string(aParam, (char*) "tv_scan", (char *) mTvScan.value().c_str());
     if (mTvDeDotCrawl.assigned())
-	EDictSetString(aParam, "tv_dedotcrawl", (char *) mTvDeDotCrawl.value().c_str());
+	epx_dict_set_string(aParam, (char*) "tv_dedotcrawl", (char *) mTvDeDotCrawl.value().c_str());
     if (mSamm.assigned())
-	EDictSetString(aParam, "samm", (char *) mSamm.value().c_str());
+	epx_dict_set_string(aParam, (char*) "samm", (char *) mSamm.value().c_str());
     if (mSetFFilter.assigned())
-	EDictSetString(aParam, "tv_set_ff", (char *) mSetFFilter.value().c_str());
+	epx_dict_set_string(aParam, (char*) "tv_set_ff", (char *) mSetFFilter.value().c_str());
     if (mSetAdaptiveFFilter.assigned())
-	EDictSetString(aParam, "tv_set_adaptive_ffilter", (char *) mSetAdaptiveFFilter.value().c_str());
+	epx_dict_set_string(aParam, (char*) "tv_set_adaptive_ffilter", (char *) mSetAdaptiveFFilter.value().c_str());
     if (mTuneFFilter.assigned())
-	EDictSetInteger(aParam, "tv_tune_ffilter",  mTuneFFilter.value());
+	epx_dict_set_integer(aParam, (char*) "tv_tune_ffilter",  mTuneFFilter.value());
     if (mTuneAdaptiveFFilter.assigned()) 
-	EDictSetInteger(aParam, "tv_tune_adaptive_ffilter",  mTuneAdaptiveFFilter.value());
+	epx_dict_set_integer(aParam, (char*) "tv_tune_adaptive_ffilter",  mTuneAdaptiveFFilter.value());
     if (mLcdScaling.assigned())
-	EDictSetString(aParam, "lcd_scaling", (char *) mLcdScaling.value().c_str());
+	epx_dict_set_string(aParam, (char*) "lcd_scaling", (char *) mLcdScaling.value().c_str());
     if (mLcdMode.assigned())
-	EDictSetString(aParam, "lcd_mode", (char *) mLcdMode.value().c_str());
+	epx_dict_set_string(aParam, (char*) "lcd_mode", (char *) mLcdMode.value().c_str());
     if (mLcdPanelID.assigned())
-	EDictSetInteger(aParam, "lcd_panel_id",  mLcdPanelID.value());
+	epx_dict_set_integer(aParam, (char*) "lcd_panel_id",  mLcdPanelID.value());
     if (mTvBrightness.assigned())
-	EDictSetInteger(aParam, "tv_brightness",  mTvBrightness.value());
+	epx_dict_set_integer(aParam, (char*) "tv_brightness",  mTvBrightness.value());
     if (mTvContrast.assigned())
-	EDictSetInteger(aParam, "tv_contrast",  mTvContrast.value());
+	epx_dict_set_integer(aParam, (char*) "tv_contrast",  mTvContrast.value());
     if (mTvSaturation.assigned())
-	EDictSetInteger(aParam, "tv_saturation",  mTvSaturation.value());
+	epx_dict_set_integer(aParam, (char*) "tv_saturation",  mTvSaturation.value());
     if (mTvTint.assigned())
-	EDictSetInteger(aParam, "tv_tint",  mTvTint.value());
+	epx_dict_set_integer(aParam, (char*) "tv_tint",  mTvTint.value());
     if (mTvHeight.assigned())
-	EDictSetInteger(aParam, "tv_size_y",  mTvHeight.value());
+	epx_dict_set_integer(aParam, (char*) "tv_size_y",  mTvHeight.value());
     if (mTvWidth.assigned())
-	EDictSetInteger(aParam, "tv_size_x",  mTvWidth.value());
+	epx_dict_set_integer(aParam, (char*) "tv_size_x",  mTvWidth.value());
     if (mTvTop.assigned())
-	EDictSetInteger(aParam,  "tv_position_y",  mTvTop.value());
+	epx_dict_set_integer(aParam, (char*)  "tv_position_y",  mTvTop.value());
     if (mTvLeft.assigned())
-	EDictSetInteger(aParam, "tv_position_x",  mTvLeft.value());
+	epx_dict_set_integer(aParam, (char*) "tv_position_x",  mTvLeft.value());
     if (mHeight2.assigned())
-	EDictSetInteger(aParam, "height2",  mHeight2.value());
+	epx_dict_set_integer(aParam, (char*) "height2",  mHeight2.value());
     if (mWidth2.assigned())
-	EDictSetInteger(aParam, "width2",  mWidth2.value());
+	epx_dict_set_integer(aParam, (char*) "width2",  mWidth2.value());
     if (mRefresh.assigned())
-	EDictSetInteger(aParam, "refresh",  mRefresh.value());
+	epx_dict_set_integer(aParam, (char*) "refresh",  mRefresh.value());
     if (mRefresh2.assigned())
-	EDictSetInteger(aParam, "refresh2",  mRefresh2.value());
+	epx_dict_set_integer(aParam, (char*) "refresh2",  mRefresh2.value());
     if (mPixelTypeString2.assigned())
-	EDictSetInteger(aParam, "pixel_type2", mPixelType2);
+	epx_dict_set_integer(aParam, (char*) "pixel_type2", mPixelType2);
 }
 
 
@@ -375,7 +379,7 @@ void CScreenComponent::enterGraphicsMode(CExecutor* aExec)
 {
     int i;
     char* name;
-    EDict* param;
+    epx_dict_t* param;
 
     //     fprintf(stderr, "ENTER GRAPHIC MODE Width[%f], Height[%f]\n", 
     // 	    mWidth.value(), mHeight.value());
@@ -383,49 +387,49 @@ void CScreenComponent::enterGraphicsMode(CExecutor* aExec)
     curWidth  = (int) mWidth.value();
     curHeight = (int) mHeight.value();
     // Load backend parameters
-    param = EDictCreate();
-    setupEpicParam(param);
+    param = epx_dict_create();
+    setupEpxParam(param);
 
     if ((mBackendType.value()) == "auto") {
 	int i = 0;
-	while((name = EBackendName(i)) != NULL) {
-	    if ((mBackend = EBackendCreate((char *)name, param)) != NULL)
+	while((name = epx_backend_name(i)) != NULL) {
+	    if ((mBackend = epx_backend_create((char *)name, param)) != NULL)
 		break;
 	    i++;
 	}
     }
     else {
 	name = (char*) mBackendType.value().c_str();
-	mBackend = EBackendCreate((char *) name, param);
+	mBackend = epx_backend_create((char *) name, param);
     }
 
     if (mBackend == NULL) {
-	puts("EpicScreenComponent: no working backend found");
+	puts("EpxScreenComponent: no working backend found");
 	if (mBackendType.value() == "x11")
-	    puts("EpicScreenComponent: How about make WITH_X11=1");
-	puts("Failed to setup epic backend.");
+	    puts("EpxScreenComponent: How about make WITH_X11=1");
+	puts("Failed to setup epx backend.");
 	exit(0);
     }
 
-    EDictDestroy(param);
+    epx_dict_destroy(param);
 
     //     if (mEvent != NULL)
     // 	mEvent->SetBackend(mBackend);
 
-    mWindow = EWindowCreate(50,50, curWidth, curHeight);
-    mWindow->mask = EEVENT_BUTTON_PRESS|EEVENT_BUTTON_RELEASE|
-	EEVENT_POINTER_MOTION|EEVENT_KEY_PRESS|EEVENT_KEY_RELEASE;
-    EWindowAttach(mWindow, mBackend);
+    mWindow = epx_window_create(50,50, curWidth, curHeight);
+    mWindow->mask = EPX_EVENT_BUTTON_PRESS|EPX_EVENT_BUTTON_RELEASE|
+	EPX_EVENT_POINTER_MOTION|EPX_EVENT_KEY_PRESS|EPX_EVENT_KEY_RELEASE;
+    epx_backend_window_attach(mBackend, mWindow);
 
-    for (i = 0; i < EPIC_BUFFERS; i++) {
-	mBuffer[i] = EPixmapCreate(curWidth, curHeight, mPixelType);
-	EPixmapAttach(mBuffer[i], mBackend);
+    for (i = 0; i < EPX_BUFFERS; i++) {
+	mBuffer[i] = epx_pixmap_create(curWidth, curHeight, mPixelType);
+	epx_backend_pixmap_attach(mBackend, mBuffer[i]);
     }
     curBuf = 0;
 
     // re-read mPixelType, if epixmap_attach has some other hard-coded idea.
-    mPixelType     = mBuffer[0]->pixelType;  
-    mBytesPerLine = (int) mWidth.value() * EPIXEL_SIZE(mPixelType);
+    mPixelType     = mBuffer[0]->pixel_format;  
+    mBytesPerLine = (int) mWidth.value() * EPX_PIXEL_BYTE_SIZE(mPixelType);
 #ifdef USE_ETHREAD
     if (mThreaded.value())
 	mThread = EThreadCreate(mBackend);
@@ -447,19 +451,19 @@ void CScreenComponent::leaveGraphicsMode(CExecutor* aExec)
 	mThread = NULL;
     }
 
-    for (i = 0; i < EPIC_BUFFERS; i++) 
-	EPixmapDetach(mBuffer[i]);
-    EWindowDetach(mWindow);
+    for (i = 0; i < EPX_BUFFERS; i++) 
+	epx_pixmap_detach(mBuffer[i]);
+    epx_window_detach(mWindow);
 
-    for (i = 0; i < EPIC_BUFFERS; i++) {
-	EPixmapDestroy(mBuffer[i]);
+    for (i = 0; i < EPX_BUFFERS; i++) {
+	epx_pixmap_destroy(mBuffer[i]);
 	mBuffer[i] = NULL;
     }
 
-    EWindowDestroy(mWindow);
+    epx_window_destroy(mWindow);
     mWindow = NULL;
 
-    EBackendDestroy(mBackend);
+    epx_backend_destroy(mBackend);
     mBackend = NULL;
     mInGraphicsMode = false;
     mActive.putValue(aExec, false);
@@ -474,31 +478,31 @@ void CScreenComponent::changeResolution(void)
     if (!mInGraphicsMode)
 	return;
 
-    for (i = 0; i < EPIC_BUFFERS; i++)
-	EPixmapDetach(mBuffer[i]);
+    for (i = 0; i < EPX_BUFFERS; i++)
+	epx_pixmap_detach(mBuffer[i]);
 
-    EWindowDetach(mWindow);
+    epx_window_detach(mWindow);
 
-    for (i = 0; i < EPIC_BUFFERS; i++) {
-	EPixmapDestroy(mBuffer[i]);
+    for (i = 0; i < EPX_BUFFERS; i++) {
+	epx_pixmap_destroy(mBuffer[i]);
 	mBuffer[i] = NULL;
     }
 
-    EWindowDestroy(mWindow);
+    epx_window_destroy(mWindow);
 
-    mWindow = EWindowCreate(50,50, curWidth, curHeight);
-    mWindow->mask = EEVENT_BUTTON_PRESS|EEVENT_BUTTON_RELEASE|
-	EEVENT_POINTER_MOTION|EEVENT_KEY_PRESS|EEVENT_KEY_RELEASE;
+    mWindow = epx_window_create(50,50, curWidth, curHeight);
+    mWindow->mask = EPX_EVENT_BUTTON_PRESS|EPX_EVENT_BUTTON_RELEASE|
+	EPX_EVENT_POINTER_MOTION|EPX_EVENT_KEY_PRESS|EPX_EVENT_KEY_RELEASE;
 
 
-    EWindowAttach(mWindow, mBackend);
-    for (i = 0; i < EPIC_BUFFERS; i++) {
-	mBuffer[i] = EPixmapCreate(curWidth, curHeight, mPixelType);
-	EPixmapAttach(mBuffer[i], mBackend);
+    epx_backend_window_attach(mBackend, mWindow);
+    for (i = 0; i < EPX_BUFFERS; i++) {
+	mBuffer[i] = epx_pixmap_create(curWidth, curHeight, mPixelType);
+	epx_backend_pixmap_attach(mBackend, mBuffer[i]);
     }
     // re-read mPixelType, if epixmap_attach has some other hard-coded idea.
-    mPixelType     = mBuffer[0]->pixelType;
-    mBytesPerLine = (int) mWidth.value() * EPIXEL_SIZE(mPixelType);
+    mPixelType     = mBuffer[0]->pixel_format;
+    mBytesPerLine = (int) mWidth.value() * EPX_PIXEL_BYTE_SIZE(mPixelType);
 }
 
 
@@ -511,7 +515,7 @@ void CScreenComponent::setup(CExecutor* aExec, bool aStart)
 	string typeString = mPixelTypeString.value();
 	int res;
 
-	if ((res = EPixelTypeFromName((char*)typeString.c_str())) == -1)
+	if ((res = epx_pixel_format_from_name((char*)typeString.c_str())) == -1)
 	    DBGFMT("CScreenComponent::execute(): pixel_type [%s] not supported",
 		   typeString.c_str());
 	else if (mPixelType != res) {
@@ -526,7 +530,7 @@ void CScreenComponent::setup(CExecutor* aExec, bool aStart)
     if (mPixelTypeString2.assigned()) {
 	int res;
 
-	if ((res = EPixelTypeFromName((char*)mPixelTypeString2.value().c_str())) == -1)
+	if ((res = epx_pixel_format_from_name((char*)mPixelTypeString2.value().c_str())) == -1)
 	    DBGFMT("CScreenComponent::execute(): pixel_type2 [%s] not supported",  mPixelTypeString2.value().c_str());
 	else if (mPixelType2 != res) {
 	    mPixelType2 = res;
@@ -585,10 +589,10 @@ void CScreenComponent::setup(CExecutor* aExec, bool aStart)
 	 mRefresh2.assigned() ||
 	 mPixelTypeString2.assigned())) {
 
-	EDict *param = EDictCreate();
-	setupEpicParam(param);
-	EBackendAdjust(mBackend, param);
-	EDictDestroy(param);
+	epx_dict_t *param = epx_dict_create();
+	setupEpxParam(param);
+	epx_backend_adjust(mBackend, param);
+	epx_dict_destroy(param);
     }
 
     if (mHeight.assigned() || mWidth.assigned()) {

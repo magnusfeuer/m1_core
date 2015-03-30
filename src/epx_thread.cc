@@ -17,8 +17,8 @@
 #include <sys/fcntl.h>
 
 #include "m1.hh"
-#include "epic.h"
-#include "epic_thread.hh"
+#include "epx.h"
+#include "epx_thread.hh"
 
 typedef struct {
     EThread*  thr;     /* The thread structure */
@@ -40,12 +40,12 @@ typedef struct {
 	} rq_event_read;
 
 	struct {
-	    EWindow* window;
+	    epx_window_t* window;
 	} rq_swap;
 
 	struct {
-	    EPixmap* pixmap;
-	    EWindow* window;
+	    epx_pixmap_t* pixmap;
+	    epx_window_t* window;
 	    int off_screen;
 	    int src_x;
 	    int src_y;
@@ -68,7 +68,7 @@ typedef struct {
     EThreadReplyType_t type;
     int status;
     union {
-	EEvent e;
+	epx_event_t e;
     } u;
 } EThreadReply_t;
     
@@ -76,7 +76,7 @@ typedef struct {
 static void* EThreadMain(void* arg);
 
 
-EThread* EThreadCreate(EBackend* backend)
+EThread* EThreadCreate(epx_backend_t* backend)
 {
     int ret;
     int arg;
@@ -165,7 +165,7 @@ int EThreadDestroy(EThread* thr)
 
 
 // Swap buffers to draw in (pixmap will be a new pixmap to use)
-int EThreadPixmapDraw(EThread* thr, EPixmap* pixmap, EWindow* window,
+int EThreadPixmapDraw(EThread* thr, epx_pixmap_t* pixmap, epx_window_t* window,
 		      int off_screen,
 		      int src_x, int src_y, int dst_x, int dst_y,
 		      unsigned int width,
@@ -204,7 +204,7 @@ int EThreadDrawCount(EThread* thr)
     return count;
 }
 
-int EThreadSwap(EThread* thr, EWindow* window)
+int EThreadSwap(EThread* thr, epx_window_t* window)
 {
     EThreadRequest_t req;
     req.type = ETHREAD_REQUEST_SWAP;
@@ -225,7 +225,7 @@ int EThreadSync(EThread* thr)
     return 0;
 }
 
-int EThreadEventRead(EThread* thr, EEvent* e, u_int16_t mask)
+int EThreadEventRead(EThread* thr, epx_event_t* e, u_int16_t mask)
 {
     EThreadRequest_t req;
     EThreadReply_t   rep;
@@ -264,7 +264,7 @@ static void* EThreadMain(void* arg)
     nfd = 1;
 
     // Poll for events (if possible)    
-    if ((pfd[1].fd = (int) EBackendEventAttach(thr->backend)) >= 0) {
+    if ((pfd[1].fd = (int) epx_backend_event_attach(thr->backend)) >= 0) {
 #ifdef EPIC_THREAD_FIONBIO
 	int one = 1;
 	ioctl(pfd[1].fd, FIONBIO, &one);
@@ -318,7 +318,8 @@ static void* EThreadMain(void* arg)
 	    }
 
 	    case ETHREAD_REQUEST_SWAP: {
-		EBackendWindowSwap(thr->backend, req.u.rq_swap.window);
+
+		epx_backend_window_swap(thr->backend, req.u.rq_swap.window);
 		break;
 	    }
 
@@ -331,12 +332,15 @@ static void* EThreadMain(void* arg)
 		// Now draw the pixmap
 		// FIXME: we must lock the pixmap/window lists!
 
-		EBackendPixmapDraw(thr->backend,
-				   req.u.rq_draw.pixmap,req.u.rq_draw.window,
-				   req.u.rq_draw.off_screen,
-				   req.u.rq_draw.src_x,req.u.rq_draw.src_y,
-				   req.u.rq_draw.dst_x,req.u.rq_draw.dst_y,
-				   req.u.rq_draw.width,req.u.rq_draw.height);
+		
+		epx_backend_pixmap_draw(thr->backend,
+					req.u.rq_draw.pixmap,
+					req.u.rq_draw.window,
+#warning "TONY FIXME: Off_screen flag not accepted by epx"
+//					req.u.rq_draw.off_screen,
+					req.u.rq_draw.src_x,req.u.rq_draw.src_y,
+					req.u.rq_draw.dst_x,req.u.rq_draw.dst_y,
+					req.u.rq_draw.width,req.u.rq_draw.height);
 		pthread_mutex_lock(&thr->dlock);
 		thr->dcount--;
 		pthread_mutex_unlock(&thr->dlock);
@@ -346,8 +350,10 @@ static void* EThreadMain(void* arg)
 	    case ETHREAD_REQUEST_EVENT_READ: {
 		int p;
 
-		p = EBackendEventRead(thr->backend, &rep.u.e,
-				      req.u.rq_event_read.mask);
+#warning "TONY FIXME: How do we filter on req.u.rq_event_read.mask"		
+		p = epx_backend_event_read(thr->backend, &rep.u.e
+//					   ,req.u.rq_event_read.mask
+		    );
 		rep.type = ETHREAD_REPLY_EVENT_READ;
 		rep.status = p;
 		write(ctl_fd, &rep, sizeof(rep));
@@ -362,7 +368,7 @@ static void* EThreadMain(void* arg)
 	}
 	
 //	if ((nfd>1) && (pfd[1].revents & POLLIN)) {
-//	    EEvent e;
+//	    epx_event_t e;
 //	    // We may have something on the event queue
 //	    EBackendEventRead(backend,&e,next_mask);
 //	}

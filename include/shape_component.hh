@@ -10,7 +10,7 @@
 #include "component.hh"
 #include <sys/types.h>
 
-#include "epic.h"
+#include "epx.h"
 
 typedef enum {
     SHAPE_NONE = 'n',

@@ -22,10 +22,10 @@ XOBJECT_TYPE_BOOTSTRAP(CDeviceManager);
 CDeviceHandlerBase::CDeviceHandlerBase(CExecutor* aExec, CBaseType *aType) :
     CExecutable(aExec, aType)
 {
-    put(aExec, XINDEX(CDeviceHandlerBase,device), UString(m1New(CString, "/")));
-    put(aExec, XINDEX(CDeviceHandlerBase,manufacturer), UString(m1New(CString, "")));
-    put(aExec, XINDEX(CDeviceHandlerBase,product), UString(m1New(CString, "")));
-    put(aExec, XINDEX(CDeviceHandlerBase,serial), UString(m1New(CString, ""))); 
+    put(aExec, XINDEX(CDeviceHandlerBase,device), UString(m1New(CString, (char*) "/")));
+    put(aExec, XINDEX(CDeviceHandlerBase,manufacturer), UString(m1New(CString, (char*) "")));
+    put(aExec, XINDEX(CDeviceHandlerBase,product), UString(m1New(CString, (char*) "")));
+    put(aExec, XINDEX(CDeviceHandlerBase,serial), UString(m1New(CString, (char*) ""))); 
     put(aExec, XINDEX(CDeviceHandlerBase,vendorID), UUnsigned(0));
     put(aExec, XINDEX(CDeviceHandlerBase,productID), UUnsigned(0));
 }
@@ -76,17 +76,17 @@ CDeviceHandlerProducerBase::CDeviceHandlerProducerBase(CExecutor* aExec, CBaseTy
 {
     mProductPattern[0] = mManufacturerPattern[0] = mSerialPattern[0] = 0;
 
-    put(aExec, XINDEX(CDeviceHandlerProducerBase,action), UString(m1New(CString, "")));
-    put(aExec, XINDEX(CDeviceHandlerProducerBase,devicePath), UString(m1New(CString, "")));
-    put(aExec, XINDEX(CDeviceHandlerProducerBase,product), UString(m1New(CString, "")));
-    put(aExec, XINDEX(CDeviceHandlerProducerBase,manufacturer), UString(m1New(CString, "")));
-    put(aExec, XINDEX(CDeviceHandlerProducerBase,serial), UString(m1New(CString, ""))); 
+    put(aExec, XINDEX(CDeviceHandlerProducerBase,action), UString(m1New(CString, (char*) "")));
+    put(aExec, XINDEX(CDeviceHandlerProducerBase,devicePath), UString(m1New(CString, (char*) "")));
+    put(aExec, XINDEX(CDeviceHandlerProducerBase,product), UString(m1New(CString, (char*) "")));
+    put(aExec, XINDEX(CDeviceHandlerProducerBase,manufacturer), UString(m1New(CString, (char*) "")));
+    put(aExec, XINDEX(CDeviceHandlerProducerBase,serial), UString(m1New(CString, (char*) ""))); 
     put(aExec, XINDEX(CDeviceHandlerProducerBase,vendorID), UUnsigned(0));
     put(aExec, XINDEX(CDeviceHandlerProducerBase,productID), UUnsigned(0));
 
-    put(aExec, XINDEX(CDeviceHandlerProducerBase,productPattern), UString(m1New(CString, "")));
-    put(aExec, XINDEX(CDeviceHandlerProducerBase,manufacturerPattern), UString(m1New(CString, "")));
-    put(aExec, XINDEX(CDeviceHandlerProducerBase,serialPattern), UString(m1New(CString, ""))); 
+    put(aExec, XINDEX(CDeviceHandlerProducerBase,productPattern), UString(m1New(CString, (char*) "")));
+    put(aExec, XINDEX(CDeviceHandlerProducerBase,manufacturerPattern), UString(m1New(CString, (char*) "")));
+    put(aExec, XINDEX(CDeviceHandlerProducerBase,serialPattern), UString(m1New(CString, (char*) ""))); 
     put(aExec, XINDEX(CDeviceHandlerProducerBase,vendorIDPattern), UUnsigned(0));
     put(aExec, XINDEX(CDeviceHandlerProducerBase,productIDPattern), UUnsigned(0));
     eventPut(aExec, XINDEX(CDeviceHandlerProducerBase, trigger), &mTrigger);

@@ -7,7 +7,7 @@
 #include "shape_component.hh"
 
 
-#include "epic.h"
+#include "epx.h"
 #include <math.h> // for nearbyintf() rounding function. Link with -m.
 
 XOBJECT_TYPE_BOOTSTRAP(CShapeComponent);
@@ -40,9 +40,9 @@ void CShapeComponent::execute(CExecutor* aExec)
 void CShapeComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
 {
     u_int8_t fader;
-    EPixel_t bcolor;
-    EPixel_t fcolor;
-    EGc* gc;
+    epx_pixel_t bcolor;
+    epx_pixel_t fcolor;
+    epx_gc_t* gc;
 
     if (!aContext || !aContext->mPixmap) {
 	printf("CPlotComponent::redraw(): No context or pixmap provided.\n");
@@ -52,12 +52,12 @@ void CShapeComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
     fader = gc->fader_value;
 
     if (mFill.value())
-	EGcSetFillStyle(gc, EPIC_FILL_STYLE_BLEND|EPIC_FILL_STYLE_AALIAS);
+	epx_gc_set_fill_style(gc, EPX_FILL_STYLE_BLEND|EPX_FILL_STYLE_AALIAS);
     else
-	EGcSetFillStyle(gc, EPIC_FILL_STYLE_NONE);
+	epx_gc_set_fill_style(gc, EPX_FILL_STYLE_NONE);
 
-    EGcSetBorderWidth(gc, mBorderWidth.value());
-    EGcSetBorderStyle(gc, EPIC_FILL_STYLE_BLEND|EPIC_BORDER_STYLE_AALIAS);
+    epx_gc_set_border_width(gc, mBorderWidth.value());
+    epx_gc_set_border_style(gc, EPX_FILL_STYLE_BLEND|EPX_BORDER_STYLE_AALIAS);
 
     bcolor.px = mBorderColor.value();
     bcolor.a  = 255;  // FIXME;
@@ -69,25 +69,25 @@ void CShapeComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
 	bcolor.a = (bcolor.a * fader) >> 8;
 	fcolor.a   = (fcolor.a * fader) >> 8;
     }
-    EGcSetFillColor(gc, fcolor);
-    EGcSetBorderColor(gc, bcolor);
+    epx_gc_set_fill_color(gc, fcolor);
+    epx_gc_set_border_color(gc, bcolor);
     switch(mShape.value()) {
     case SHAPE_NONE:
 	break;
     case SHAPE_RECTANGLE:
-	EPixmapDrawRectangle(aContext->mPixmap, gc,
-			     int(aContext->lLeft), 
-			     int(aContext->lTop),
-			     int(aContext->cWidth),
-			     int(aContext->cHeight));
+	epx_pixmap_draw_rectangle(aContext->mPixmap, gc,
+				  int(aContext->lLeft), 
+				  int(aContext->lTop),
+				  int(aContext->cWidth),
+				  int(aContext->cHeight));
 	break;
     case SHAPE_ELLIPSE: {
 	float w = aContext->cWidth;
 	float h = aContext->cHeight;
 	float x = aContext->lLeft;
 	float y = aContext->lTop;
-	EPixmapDrawEllipse(aContext->mPixmap, gc, (int)x,(int)y,
-			   (int)w,(int)h);
+	epx_pixmap_draw_ellipse(aContext->mPixmap, gc, (int)x,(int)y,
+				(int)w,(int)h);
 	break;
     }
 
@@ -101,11 +101,11 @@ void CShapeComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
 	float x0 = l + (w/2);
 	float x1 = l;
 	float x2 = l + w -1;
-	EPixmapDrawTriangle(aContext->mPixmap, 
-			    gc,
-			    (int)x0, (int)y0, 
-			    (int)x1, (int)y1,
-			    (int)x2, (int)y2);
+	epx_pixmap_draw_triangle(aContext->mPixmap, 
+				 gc,
+				 (int)x0, (int)y0, 
+				 (int)x1, (int)y1,
+				 (int)x2, (int)y2);
 	break;
     }
 

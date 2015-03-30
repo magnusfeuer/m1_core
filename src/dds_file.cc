@@ -185,7 +185,7 @@ int CDDSFile::width(void)
 
 int CDDSFile::colorDepth(void) 
 {
-    return EPIXEL_SIZE(mHeader.mPixelType);
+    return EPX_PIXEL_BIT_SIZE(mHeader.mPixelType);
 }
 
 int CDDSFile::pixelType(void)

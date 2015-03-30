@@ -102,7 +102,7 @@ void m1LiveCheck(CRuntime* obj)
 	if (obj == active_pool[i])
 	    return;
     }
-    m1BreakHere(__FILE__, __LINE__, "object is deleted");
+    m1BreakHere(__FILE__, __LINE__, (char*) "object is deleted");
 }
 
 #else
@@ -141,7 +141,7 @@ void m1RemoveActiveObject(CRuntime* obj)
     int i;
 
     if (((i = obj->mPoolIndex) < 0) || (i >= active_pool_size)) {
-	m1BreakHere(__FILE__, __LINE__, "object has bad pool index");
+	m1BreakHere(__FILE__, __LINE__, (char*) "object has bad pool index");
 	return;
     }
     DBGFMT_MEM("NOT ACTIVE THIS: 0x%08lx: %lu @active_pool[%d]", 
@@ -217,7 +217,7 @@ static void m1RemoveZeroObject(CRuntime* obj)
     int i;
 
     if (((i = obj->mPoolIndex) < 0) || (i >= zero_pool_size)) {
-	m1BreakHere(__FILE__, __LINE__, "object has bad pool index");
+	m1BreakHere(__FILE__, __LINE__, (char*) "object has bad pool index");
 	return;
     }
 #ifdef DEBUG
@@ -294,7 +294,7 @@ CRuntime* CRuntime::releaseThis(void)
     STAT_INC(m1_stat_release);
     switch(mRefCount) {
     case 0:
-	m1BreakHere(__FILE__, __LINE__, "releaseThis on zero object");
+	m1BreakHere(__FILE__, __LINE__, (char*) "releaseThis on zero object");
 	return this;
     case 1:
 	DBGFMT_MEM("RELEASE THIS: 0x%08lx: %lu  %s", 
@@ -316,7 +316,7 @@ void CRuntime::stop(CRtExecutor* aExec)
 	       (unsigned long) this, mRefCount, debugName().c_str());
     STAT_INC(m1_stat_deleted);
     if (mRefCount != 0) {
-	m1BreakHere(__FILE__, __LINE__, "stop on live object");
+	m1BreakHere(__FILE__, __LINE__, (char*)  "stop on live object");
     }
     else {
 	m1RemoveZeroObject(this);

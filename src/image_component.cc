@@ -8,7 +8,7 @@
 #include "key.hh"
 #include "bio_stream.hh"
 
-#include "epic.h"
+#include "epx.h"
 #include <math.h> // for nearbyintf() rounding function. Link with -lm.
 #include <stdarg.h>
 #include <png.h>
@@ -34,7 +34,7 @@ static void png_bio_read(png_structp png_ptr, png_bytep buffer, png_size_t size)
 }
 
 // Only load png files, but we should add jpeg and gif!
-static EPixmap* load_png(CBioStream* bio, char* file_name, int pixel_type, bool* use_alpha)
+static epx_pixmap_t* load_png(CBioStream* bio, char* file_name, int pixel_type, bool* use_alpha)
 {
     unsigned int width;   // image width
     unsigned int height;  // image height
@@ -46,7 +46,7 @@ static EPixmap* load_png(CBioStream* bio, char* file_name, int pixel_type, bool*
     png_byte bit_depth;
     png_structp png_ptr;
     png_infop info_ptr;
-    EPixmap* pic = NULL;
+    epx_pixmap_t* pic = NULL;
     int has_alpha = 0;
 
     bio->read(header, sizeof(header));
@@ -86,7 +86,7 @@ static EPixmap* load_png(CBioStream* bio, char* file_name, int pixel_type, bool*
 
     rowbytes = info_ptr->rowbytes;
 
-    pic = EPixmapCreate(width, height, pixel_type);
+    pic = epx_pixmap_create(width, height, pixel_type);
 
     /* read file */
     if (setjmp(png_jmpbuf(png_ptr))) {
@@ -131,13 +131,13 @@ static EPixmap* load_png(CBioStream* bio, char* file_name, int pixel_type, bool*
 		    an--;
 		}
 	    }
-	    EPixmapPutPixels(pic, 0, y, width, 1, 
-			     EPIXEL_TYPE_RGBA, 0, row_pointers[y], width*4);
+	    epx_pixmap_put_pixels(pic, 0, y, width, 1, 
+				  EPX_FORMAT_RGBA, 0, row_pointers[y], width*4);
 	    break;
 
 	case PNG_COLOR_TYPE_RGB:
-	    EPixmapPutPixels(pic, 0, y, width, 1,
-			     EPIXEL_TYPE_RGB, 0, row_pointers[y], width*3);
+	    epx_pixmap_put_pixels(pic, 0, y, width, 1,
+				  EPX_FORMAT_RGB, 0, row_pointers[y], width*3);
 	    break;
 	default:
 	    if (c_warn) {
@@ -153,7 +153,7 @@ static EPixmap* load_png(CBioStream* bio, char* file_name, int pixel_type, bool*
 
 error:
     if (pic != NULL)
-	EPixmapDestroy(pic);
+	epx_pixmap_destroy(pic);
     *use_alpha = 0;
     return NULL;
 }
@@ -181,7 +181,7 @@ static void my_error_exit (j_common_ptr cinfo)
 }
 
 
-static EPixmap* load_jpeg(char * file_name, int pixel_type, bool* use_alpha)
+static epx_pixmap_t* load_jpeg(char * file_name, int pixel_type, bool* use_alpha)
 {
   /* This struct contains the JPEG decompression parameters and pointers to
    * working space (which is allocated as needed by the JPEG library).
@@ -196,7 +196,7 @@ static EPixmap* load_jpeg(char * file_name, int pixel_type, bool* use_alpha)
   FILE * infile;                /* source file */
   JSAMPARRAY buffer;            /* Output row buffer */
   int row_stride;               /* physical row width in output buffer */
-  EPixmap* pic = NULL;
+  epx_pixmap_t* pic = NULL;
 
   /* In this example we want to open the input file before doing anything else,
    * so that the setjmp() error recovery below can assume the file is open.
@@ -221,7 +221,7 @@ static EPixmap* load_jpeg(char * file_name, int pixel_type, bool* use_alpha)
        * We need to clean up the JPEG object, close the input file, and return.
        */
       jpeg_destroy_decompress(&cinfo);
-      if (pic) EPixmapDestroy(pic);
+      if (pic) epx_pixmap_destroy(pic);
       fclose(infile);
       return NULL;
   }
@@ -273,7 +273,7 @@ static EPixmap* load_jpeg(char * file_name, int pixel_type, bool* use_alpha)
   buffer = (*cinfo.mem->alloc_sarray)
       ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
 
-  pic = EPixmapCreate(cinfo.output_width, cinfo.output_height, pixel_type);
+  pic = epx_pixmap_create(cinfo.output_width, cinfo.output_height, pixel_type);
   if (pic == NULL)
       goto error;
 
@@ -291,9 +291,9 @@ static EPixmap* load_jpeg(char * file_name, int pixel_type, bool* use_alpha)
        */
       (void) jpeg_read_scanlines(&cinfo, buffer, 1);
       /* Assume put_scanline_someplace wants a pointer and sample count. */
-      EPixmapPutPixels(pic, 0, y, cinfo.output_width, 1,
-		       EPIXEL_TYPE_RGB, 0, buffer[0], 
-		       3*cinfo.output_width);
+      epx_pixmap_put_pixels(pic, 0, y, cinfo.output_width, 1,
+			    EPIXEL_TYPE_RGB, 0, buffer[0], 
+			    3*cinfo.output_width);
   }
 
   /* Step 7: Finish decompression */
@@ -344,7 +344,7 @@ CImageComponent::CImageComponent(CExecutor* aExec, CBaseType *aType):
     mBorderWidth(this),
     mBorderColor(this),
     mImage(NULL),
-    mPixelType(EPIXEL_TYPE_BGRA),
+    mPixelType(EPX_FORMAT_BGRA),
     mUseAlpha(false)
 {
     mIgnoreAlpha.putValue(aExec, false);
@@ -361,14 +361,14 @@ CImageComponent::~CImageComponent(void)
 {
     DBGFMT("CImageComponent::~CShapeComponent(): Called");
     if (mImage != NULL)
-	EPixmapDestroy(mImage);
+	epx_pixmap_destroy(mImage);
 }
 
 void CImageComponent::loadImage(CExecutor* aExec, bool aStart)
 {
     if (mPixelTypeString.assigned()) {
 	string name = mPixelTypeString.value();
-	mPixelType = EPixelTypeFromName((char*)name.c_str());
+	mPixelType = epx_pixel_format_from_name((char*)name.c_str());
     }
 
     if (aStart && mIgnoreAlpha.assigned())
@@ -379,7 +379,7 @@ void CImageComponent::loadImage(CExecutor* aExec, bool aStart)
 	string ext = extension(filename);
 	DBGFMT("mImageFile set to [%s]",(char*) filename.c_str());
 	if (mImage != NULL) {
-	    EPixmapDestroy(mImage);
+	    epx_pixmap_destroy(mImage);
 	    mImage = NULL;
 	}
 	if (strcasecmp(ext.c_str(), ".png") == 0) {
@@ -439,10 +439,10 @@ void CImageComponent::execute(CExecutor* aExec)
 
 void CImageComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
 {
-    EGc* gc;
+    epx_gc_t* gc;
     u_int8_t fader;
-    EPixel_t color;
-    EPixmap* sImage;
+    epx_pixel_t color;
+    epx_pixmap_t* sImage;
 
     if (!aContext || !aContext->mPixmap) {
 	printf("CImageComponent::redraw(): No context or pixmap provided.\n");
@@ -456,11 +456,11 @@ void CImageComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
     sImage = mImage;
 
     if (needScale(aContext) && canScale(aContext)) {
-	EPixmap*  dImage;
+	epx_pixmap_t*  dImage;
 
-	if ((dImage = EPixmapCreate(int(aContext->cWidth),
-				    int(aContext->cHeight),
-				    aContext->mPixmap->pixelType)) != NULL) {
+	if ((dImage = epx_pixmap_create(int(aContext->cWidth),
+					int(aContext->cHeight),
+					aContext->mPixmap->pixel_format)) != NULL) {
 	    scaleImage(mImage, dImage, true);
 	    sImage = dImage;
 	}
@@ -468,33 +468,33 @@ void CImageComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
     gc = aContext->mGc;
     fader = gc->fader_value;
 
-    EGcSetBorderWidth(gc, mBorderWidth.value());
+    epx_gc_set_border_width(gc, mBorderWidth.value());
     if (mBorderWidth.value()) {
 	color.px = mBorderColor.value();
 	color.a  = 255; // FIXME
 	if (fader != ALPHA_FACTOR_1)
 	    color.a = (color.a * fader) >> 8;
-	EGcSetBorderColor(gc, color);
+	epx_gc_set_border_color(gc, color);
     }
 
     if (mUseAlpha)
 	// Image contain alpha values
-	EPixmapFadeArea(sImage, aContext->mPixmap,
-			fader,
-			0, 0,
-			int(aContext->lLeft), 
-			int(aContext->lTop),
-			sImage->width, sImage->height);
+	epx_pixmap_fade_area(sImage, aContext->mPixmap,
+			     fader,
+			     0, 0,
+			     int(aContext->lLeft), 
+			     int(aContext->lTop),
+			     sImage->width, sImage->height);
     else
 	// Image do not contain alpha values
-	EPixmapAlphaArea(sImage, aContext->mPixmap,
-			 fader,
-			 0, 0,
-			 int(aContext->lLeft), 
-			 int(aContext->lTop),
-			 sImage->width, sImage->height);
+	epx_pixmap_alpha_area(sImage, aContext->mPixmap,
+			      fader,
+			      0, 0,
+			      int(aContext->lLeft), 
+			      int(aContext->lTop),
+			      sImage->width, sImage->height);
     if (sImage != mImage)
-	EPixmapDestroy(sImage);
+	epx_pixmap_destroy(sImage);
 }
 
 

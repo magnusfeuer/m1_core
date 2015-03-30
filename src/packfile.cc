@@ -442,7 +442,7 @@ CPacket *CPacketManager::loadHeader(const string &aFileName)
     //    printf("Loading header from pfl [%s]\n", aFileName.c_str());
     if (!in) {
 	DBGFMT_WARN("CPacket::leadHeader(): Could not open [%s]", aFileName.c_str());
-	return false;
+	return 0;
     }
     res = loadHeader(in, aFileName);
     fclose(in);

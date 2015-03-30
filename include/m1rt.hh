@@ -40,7 +40,7 @@ typedef list<string>::iterator CDebugModulesIterator;
 #define DBGFMT_mask(mask,...)			\
     do {								\
 	if (M1DBG_IS_SET((mask)))					\
-	    m1EmitError(__FILE__, __LINE__, __VA_ARGS__);		\
+	    m1EmitError((char*) __FILE__, __LINE__, (char*) __VA_ARGS__); \
     } while(0)
 
 
@@ -56,7 +56,7 @@ typedef list<string>::iterator CDebugModulesIterator;
 	     _dbgcls_iter != _dbgcls_map.end() && *_dbgcls_iter != type()->typeName();	\
             ++_dbgcls_iter);							\
         if (_dbgcls_iter != _dbgcls_map.end())				                \
-	    m1EmitError(__FILE__, __LINE__, __VA_ARGS__);	                        \
+	    m1EmitError((char*) __FILE__, __LINE__, __VA_ARGS__);	\
 }
 
 #else
@@ -67,11 +67,11 @@ typedef list<string>::iterator CDebugModulesIterator;
 #define DBGFMT_mask(mask,...)
 #endif
 
-#define ERRFMT(...)      m1EmitError(__FILE__, __LINE__, __VA_ARGS__)
+#define ERRFMT(...)      m1EmitError((char*) __FILE__, __LINE__, __VA_ARGS__)
 #define WARNFMT(...)						\
     do {							\
 	if (m1_debug_mask & M1DBG_WARN)				\
-	    m1EmitError(__FILE__, __LINE__, __VA_ARGS__);	\
+	    m1EmitError((char*) __FILE__, __LINE__, __VA_ARGS__);	\
     } while(0)
 
 #define DBGFMT(...)      DBGFMT_mask(M1DBG_INFO,__VA_ARGS__)

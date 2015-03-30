@@ -646,14 +646,14 @@ err_too_short:
 #define STRING(x) #x
 
 #define INIT_INSTRUCTION(i,iarg,ia,iconsume,iproduce,ipre,ipost) do {	\
-	vm_instruction[op_##i].name = #i;			\
+	vm_instruction[op_##i].name = (char*) #i;			\
 	vm_instruction[op_##i].instr = &&i;			\
 	vm_instruction[op_##i].consume = iconsume;		\
 	vm_instruction[op_##i].produce = iproduce;		\
 	vm_instruction[op_##i].args    = iarg;			\
-	vm_instruction[op_##i].pre_spec = ipre;			\
-	vm_instruction[op_##i].post_spec = ipost;		\
-	vm_instruction[op_##i].arg_spec = ia;			\
+	vm_instruction[op_##i].pre_spec = (char*) ipre;		\
+	vm_instruction[op_##i].post_spec = (char*) ipost;	\
+	vm_instruction[op_##i].arg_spec = (char*) ia;		\
     } while(0)
 
 //
@@ -964,7 +964,7 @@ static bool isort_compare(UData a, UData b)
     int i = isort_compare_index;
 
     if ((i < 0) || (i >= (int) ao->size()) ||(i >= (int) bo->size())) {
-	m1BreakHere(__FILE__, __LINE__, "field index exception");
+	m1BreakHere(__FILE__, __LINE__, (char*) "field index exception");
 	throw M1StatusError;
     }
     if (((t = ao->typeAt(i)) != bo->typeAt(i)))
@@ -1005,7 +1005,7 @@ static pid_t open_pipe(const char* command, FILE** infp, FILE** outfp)
     char *shell = getenv("M1_SHELL");
     
     if (!shell)
-	shell = "/bin/sh";
+	shell = (char*) "/bin/sh";
 
     p_stdin[0]  = p_stdin[1]  = -1;
     p_stdout[0] = p_stdout[1] = -1;
@@ -2124,7 +2124,7 @@ static int format_float(ostream* os, double x, int code,
 			int flags, int width, int prec)
 {
     int  exp;          /* exponent returned from unscale */
-    char* prefix = ""; /* "", "+", "-" or " " */
+    char* prefix = (char*) ""; /* "", "+", "-" or " " */
     int  ds[MAX_DS+1]; /* fraction digits 0.xxxxxx E+-yyy */
     int* dp = ds+1;    /* spare digit for round up digit */
     int  dwidth;
@@ -2134,13 +2134,13 @@ static int format_float(ostream* os, double x, int code,
 
     if (x < 0) {
 	x = -x;
-	prefix = "-";
+	prefix = (char*)  "-";
     }
     else {
 	if ((x > 0) && (flags & FMT_PLUS))
-	    prefix = "+";
+	    prefix = (char*)  "+";
 	else if (flags & FMT_SPACE)
-	    prefix = " ";
+	    prefix = (char*)  " ";
     }
 
     if (isinf(x)) {
@@ -2415,7 +2415,7 @@ static UData builtin_getenv(CExecutor* aExec, UData* args)
     if (env != NULL)
 	r.str = m1New(CString, string(env));
     else
-	r.str = m1New(CString, "");
+	r.str = m1New(CString, (char*) "");
     return r;
 }
 
@@ -2537,7 +2537,7 @@ static UData builtin_sender(CExecutor* aExec, UData* args)
 	r.str = m1New(CString, oStream.str());
     }
     else 
-	r.str = m1New(CString, "");
+	r.str = m1New(CString, (char*) "");
     return r;
 }
 
@@ -2570,126 +2570,126 @@ typedef struct _builtin_template {
 
 static TBuiltin m1_template_builtin[] =
 {
-    { "i",  "min", true, builtin_imin,     {"i", "i", NULL, } },
+    { (char*) "i", (char*) "min", true, builtin_imin,     {(char*)"i", (char*) "i", NULL, } },
 
-    { "f",  "min", true, builtin_fmin,     {"f", "f", NULL, } },
+    { (char*) "f", (char*) "min", true, builtin_fmin,     {(char*)"f", (char*) "f", NULL, } },
 
-    { "i",  "max", true, builtin_imax,     {"i", "i", NULL, } },
+    { (char*) "i", (char*) "max", true, builtin_imax,     {(char*)"i", (char*) "i", NULL, } },
 
-    { "f",  "max", true, builtin_fmax,     {"f", "f", NULL, } },
+    { (char*) "f", (char*) "max", true, builtin_fmax,     {(char*)"f", (char*) "f", NULL, } },
 
 
-    { "i",  "abs", true, builtin_iabs,     {"i",NULL,} },
+    { (char*) "i", (char*) "abs", true, builtin_iabs,     {(char*)"i",NULL,} },
 
-    { "f",  "abs", true, builtin_fabs,     {"f",NULL,} },
+    { (char*) "f", (char*) "abs", true, builtin_fabs,     {(char*)"f",NULL,} },
 
-    { "i",  "sign", true, builtin_isign,   {"i",NULL,} },
+    { (char*) "i", (char*) "sign", true, builtin_isign,   {(char*)"i",NULL,} },
 
-    { "i",  "sign", true, builtin_fsign,   {"f",NULL,} },
+    { (char*) "i", (char*) "sign", true, builtin_fsign,   {(char*)"f",NULL,} },
 
-    { "f",  "trunc", true, builtin_trunc,  {"f",NULL,} },
+    { (char*) "f", (char*) "trunc", true, builtin_trunc,  {(char*)"f",NULL,} },
 
-    { "f",  "round", true, builtin_round,  {"f",NULL,} },
+    { (char*) "f", (char*) "round", true, builtin_round,  {(char*)"f",NULL,} },
 
-    { "f",  "ceil", true, builtin_ceilf,   {"f",NULL,} },
+    { (char*) "f", (char*) "ceil", true, builtin_ceilf,   {(char*)"f",NULL,} },
 
-    { "f",  "floor", true, builtin_floorf, {"f",NULL,} },
+    { (char*) "f", (char*) "floor", true, builtin_floorf, {(char*)"f",NULL,} },
 
-    { "f",  "sin", true, builtin_sin,      {"f",NULL,} },
+    { (char*) "f", (char*) "sin", true, builtin_sin,      {(char*)"f",NULL,} },
 
-    { "f",  "cos", true, builtin_cos,      {"f",NULL,} },
+    { (char*) "f", (char*) "cos", true, builtin_cos,      {(char*)"f",NULL,} },
 
-    { "f",  "pi",  true, builtin_pi,       {NULL,} },
+    { (char*) "f", (char*) "pi",  true, builtin_pi,       {NULL,} },
 
-    { "f",  "sqrt", true, builtin_sqrt,    {"f",NULL,} },
+    { (char*) "f", (char*) "sqrt", true, builtin_sqrt,    {(char*)"f",NULL,} },
 
-    { "f",  "dist", true, builtin_dist,    {"f","f",NULL,} },
+    { (char*) "f", (char*) "dist", true, builtin_dist,    {(char*)"f",(char*)"f",NULL,} },
 
     // SYSTEM
-    { "f","now", false, builtin_now,       {NULL,} },
+    { (char*) "f",(char*)"now", false, builtin_now,       {NULL,} },
 
-    { "u","inow", false, builtin_inow,     {NULL,} },
+    { (char*) "u",(char*)"inow", false, builtin_inow,     {NULL,} },
 
-    { "u","cycle", false, builtin_cycle,   {NULL,} },
+    { (char*) "u",(char*)"cycle", false, builtin_cycle,   {NULL,} },
 
-    { "u","refcount", false, builtin_refcount_arr,  {"{T}[]", NULL,} },
+    { (char*) "u",(char*)"refcount", false, builtin_refcount_arr,  {(char*)"{T}[]", NULL,} },
 
-    { "u","refcount", false, builtin_refcount_obj,  {"({T})", NULL,} },
+    { (char*) "u",(char*)"refcount", false, builtin_refcount_obj,  {(char*)"({T})", NULL,} },
 
-    { "f","randomf", false, builtin_randomf,        {NULL,} },
+    { (char*) "f",(char*)"randomf", false, builtin_randomf,        {NULL,} },
 
-    { "u","random", false, builtin_random,          {NULL,} },
+    { (char*) "u",(char*)"random", false, builtin_random,          {NULL,} },
 
-    { "u","printf", false, builtin_printf,          {"s","...",NULL} },
+    { (char*) "u",(char*)"printf", false, builtin_printf,          {(char*)"s",(char*)"...",NULL} },
 
-    { "s","sprintf", false, builtin_sprintf,        {"s","...",NULL} },
+    { (char*) "s",(char*)"sprintf", false, builtin_sprintf,        {(char*)"s",(char*)"...",NULL} },
 
-    { "s", "getenv", false, builtin_getenv,         {"s",NULL} },
+    { (char*) "s", (char*) "getenv", false, builtin_getenv,         {(char*)"s",NULL} },
 
-    { "u", "reload_m1", false, builtin_reload_m1,   { NULL} },
+    { (char*) "u", (char*) "reload_m1", false, builtin_reload_m1,   { NULL} },
 
-    { "u", "reload_lib", false, builtin_reload_lib, { NULL} },
+    { (char*) "u", (char*) "reload_lib", false, builtin_reload_lib, { NULL} },
 
-    { "u", "reboot", false, builtin_reboot,         { NULL} },
+    { (char*) "u", (char*) "reboot", false, builtin_reboot,         { NULL} },
 
-    { "b", "debug", false, builtin_debug,         { NULL} },
+    { (char*) "b", (char*) "debug", false, builtin_debug,         { NULL} },
 
     // Array operations
-    { "u","size", false, builtin_size,              {"{T}[]",NULL} },
+    { (char*) "u",(char*)"size", false, builtin_size,              {(char*)"{T}[]",NULL} },
 
-    { "v","rotate", false, builtin_rotate,  {"{T}[]","i",NULL} },
+    { (char*) "v",(char*)"rotate", false, builtin_rotate,  {(char*)"{T}[]",(char*)"i",NULL} },
 
-    { "v","reverse", false, builtin_reverse, {"{T}[]",NULL} },
+    { (char*) "v",(char*)"reverse", false, builtin_reverse, {(char*)"{T}[]",NULL} },
 
-    { "v", "swap", false, builtin_swap,      {"{T}[]","i", "i", NULL} },
+    { (char*) "v", (char*) "swap", false, builtin_swap,      {(char*)"{T}[]",(char*)"i", (char*) "i", NULL} },
 
-    { "v","sort", false, builtin_sort,      {"{T}[]",NULL} },
+    { (char*) "v",(char*)"sort", false, builtin_sort,      {(char*)"{T}[]",NULL} },
 
-    { "v","sort", false, builtin_sort_index, {"{T}[]","i",NULL} },
+    { (char*) "v",(char*)"sort", false, builtin_sort_index, {(char*)"{T}[]",(char*)"i",NULL} },
 
     // Temporary hacks
-    { "i", "wcolumns", false, builtin_wcolumns, { "s", "s", "f[][]", NULL} },
+    { (char*) "i", (char*) "wcolumns", false, builtin_wcolumns, { (char*) "s", (char*) "s", (char*) "f[][]", NULL} },
 
-    { "i", "rcolumns", false, builtin_rcolumns, { "s", "s", "f[][]", NULL} },
+    { (char*) "i", (char*) "rcolumns", false, builtin_rcolumns, { (char*) "s", (char*) "s", (char*) "f[][]", NULL} },
 
-    { "i", "rwcolumns", false, builtin_rwcolumns,
-      {"s", "s", "f[][]", "s", "f[][]", NULL }},
+    { (char*) "i", (char*) "rwcolumns", false, builtin_rwcolumns,
+      {(char*)"s", (char*) "s", (char*) "f[][]", (char*) "s", (char*) "f[][]", NULL }},
     
     //
     //  Object functions
     //
-    { "{(T)}", "clone", false, builtin_clone, {"{(T)}", NULL}  },
+    { (char*) "{(T)}", (char*) "clone", false, builtin_clone, {(char*)"{(T)}", NULL}  },
 
-    { "{(T)}", "copy", false, builtin_copy, {"{(T)}", NULL}  },
+    { (char*) "{(T)}", (char*) "copy", false, builtin_copy, {(char*)"{(T)}", NULL}  },
 
     //
     // String ops.
     //
-    { "u","size", true, builtin_strsize,      {"s",NULL} },
+    { (char*) "u",(char*)"size", true, builtin_strsize,      {(char*)"s",NULL} },
 
-    { "u", "strlen", true, builtin_strlen,    { "s", NULL } },
+    { (char*) "u", (char*) "strlen", true, builtin_strlen,    { (char*) "s", NULL } },
 
-    { "s", "strcat", true, builtin_strcat,    { "s", "s", NULL } },
+    { (char*) "s", (char*) "strcat", true, builtin_strcat,    { (char*) "s", (char*) "s", NULL } },
 
-    { "s", "substr", true, builtin_substr_3,  { "s", "u", "u", NULL } },
+    { (char*) "s", (char*) "substr", true, builtin_substr_3,  { (char*) "s", (char*) "u", (char*) "u", NULL } },
 
-    { "s", "substr", true, builtin_substr_2,  { "s", "u", NULL } },
+    { (char*) "s", (char*) "substr", true, builtin_substr_2,  { (char*) "s", (char*) "u", NULL } },
 
-    { "i", "strchr", true, builtin_strchr,    { "s", "c", NULL } },
+    { (char*) "i", (char*) "strchr", true, builtin_strchr,    { (char*) "s", (char*) "c", NULL } },
 
-    { "i", "atoi",   true, builtin_atoi,      { "s", NULL } },
+    { (char*) "i", (char*) "atoi",   true, builtin_atoi,      { (char*) "s", NULL } },
 
-    { "u", "atou", true, builtin_atou,        { "s", NULL } },
+    { (char*) "u", (char*) "atou", true, builtin_atou,        { (char*) "s", NULL } },
 
-    { "f", "atof", true, builtin_atof,        { "s", NULL } },
+    { (char*) "f", (char*) "atof", true, builtin_atof,        { (char*) "s", NULL } },
 
     //
     //  Event functions
     //
 
-    { "i", "updated", false, builtin_updated, { "{T}E", NULL }},
+    { (char*) "i", (char*) "updated", false, builtin_updated, { (char*) "{T}E", NULL }},
 
-    { "s", "sender", false,  builtin_sender,   { "{T}E", NULL }},
+    { (char*) "s", (char*) "sender", false,  builtin_sender,   { (char*) "{T}E", NULL }},
  
     { NULL,  NULL,   false,  NULL,             {NULL,}}
 };
@@ -2698,126 +2698,126 @@ static TBuiltin m1_template_builtin[] =
 
 static UBuiltin m1_builtin[] =
 {
-    { M1TYPE_SIGNED,  "min", true, builtin_imin, 
+    { M1TYPE_SIGNED, (char*) "min", true, builtin_imin, 
       {M1TYPE_SIGNED, M1TYPE_SIGNED, BUILTIN_ARG_END,} },
 
-    { M1TYPE_FLOAT,  "min", true, builtin_fmin, 
+    { M1TYPE_FLOAT, (char*) "min", true, builtin_fmin, 
       {M1TYPE_FLOAT, M1TYPE_FLOAT, BUILTIN_ARG_END,} },
 
-    { M1TYPE_SIGNED,  "max", true, builtin_imax, 
+    { M1TYPE_SIGNED, (char*) "max", true, builtin_imax, 
       {M1TYPE_SIGNED, M1TYPE_SIGNED, BUILTIN_ARG_END,} },
 
-    { M1TYPE_FLOAT,  "max", true, builtin_fmax, 
+    { M1TYPE_FLOAT, (char*) "max", true, builtin_fmax, 
       {M1TYPE_FLOAT, M1TYPE_FLOAT, BUILTIN_ARG_END,} },
 
-    { M1TYPE_SIGNED,  "abs", true, builtin_iabs, 
+    { M1TYPE_SIGNED, (char*) "abs", true, builtin_iabs, 
       {M1TYPE_SIGNED,BUILTIN_ARG_END,} },
 
-    { M1TYPE_FLOAT,  "abs", true, builtin_fabs, 
+    { M1TYPE_FLOAT, (char*) "abs", true, builtin_fabs, 
       {M1TYPE_FLOAT,BUILTIN_ARG_END,} },
 
-    { M1TYPE_SIGNED,  "sign", true, builtin_isign, 
+    { M1TYPE_SIGNED, (char*) "sign", true, builtin_isign, 
       {M1TYPE_SIGNED,BUILTIN_ARG_END,} },
 
-    { M1TYPE_SIGNED,  "sign", true, builtin_fsign, 
+    { M1TYPE_SIGNED, (char*) "sign", true, builtin_fsign, 
       {M1TYPE_FLOAT,BUILTIN_ARG_END,} },
 
-    { M1TYPE_FLOAT,  "trunc", true, builtin_trunc, 
+    { M1TYPE_FLOAT, (char*) "trunc", true, builtin_trunc, 
       {M1TYPE_FLOAT,BUILTIN_ARG_END,} },
 
-    { M1TYPE_FLOAT,  "round", true, builtin_round, 
+    { M1TYPE_FLOAT, (char*) "round", true, builtin_round, 
       {M1TYPE_FLOAT,BUILTIN_ARG_END,} },
 
-    { M1TYPE_FLOAT,  "ceil", true, builtin_ceilf, 
+    { M1TYPE_FLOAT, (char*) "ceil", true, builtin_ceilf, 
       {M1TYPE_FLOAT,BUILTIN_ARG_END,} },
 
-    { M1TYPE_FLOAT,  "floor", true, builtin_floorf, 
+    { M1TYPE_FLOAT, (char*) "floor", true, builtin_floorf, 
       {M1TYPE_FLOAT,BUILTIN_ARG_END,} },
 
-    { M1TYPE_FLOAT,  "sin", true, builtin_sin, 
+    { M1TYPE_FLOAT, (char*) "sin", true, builtin_sin, 
       {M1TYPE_FLOAT,BUILTIN_ARG_END,} },
 
-    { M1TYPE_FLOAT,  "cos", true, builtin_cos, 
+    { M1TYPE_FLOAT, (char*) "cos", true, builtin_cos, 
       {M1TYPE_FLOAT,BUILTIN_ARG_END,} },
 
-    { M1TYPE_FLOAT,  "pi",  true, builtin_pi, 
+    { M1TYPE_FLOAT, (char*) "pi",  true, builtin_pi, 
       {BUILTIN_ARG_END,} },
 
-    { M1TYPE_FLOAT,  "sqrt", true, builtin_sqrt, 
+    { M1TYPE_FLOAT, (char*) "sqrt", true, builtin_sqrt, 
       {M1TYPE_FLOAT,BUILTIN_ARG_END,} },
 
-    { M1TYPE_FLOAT,  "dist", true, builtin_dist, 
+    { M1TYPE_FLOAT, (char*) "dist", true, builtin_dist, 
       {M1TYPE_FLOAT,M1TYPE_FLOAT,BUILTIN_ARG_END,} },
 
     // SYSTEM
-    { M1TYPE_FLOAT,"now", false, builtin_now, 
+    { M1TYPE_FLOAT,(char*)"now", false, builtin_now, 
       {BUILTIN_ARG_END,} },
 
-    { M1TYPE_UNSIGNED,"inow", false, builtin_inow, 
+    { M1TYPE_UNSIGNED,(char*)"inow", false, builtin_inow, 
       {BUILTIN_ARG_END,} },
 
-    { M1TYPE_UNSIGNED,"cycle", false, builtin_cycle, 
+    { M1TYPE_UNSIGNED,(char*)"cycle", false, builtin_cycle, 
       {BUILTIN_ARG_END,} },
 
-    { M1TYPE_UNSIGNED,"refcount", false, builtin_refcount_arr, 
+    { M1TYPE_UNSIGNED,(char*)"refcount", false, builtin_refcount_arr, 
       {M1TYPE_ARRAY, BUILTIN_ARG_END,} },
 
-    { M1TYPE_UNSIGNED,"refcount", false, builtin_refcount_obj, 
+    { M1TYPE_UNSIGNED,(char*)"refcount", false, builtin_refcount_obj, 
       {M1TYPE_OBJECT, BUILTIN_ARG_END,} },
 
-    { M1TYPE_FLOAT,"randomf", false, builtin_randomf, 
+    { M1TYPE_FLOAT,(char*)"randomf", false, builtin_randomf, 
       {BUILTIN_ARG_END,} },
 
-    { M1TYPE_UNSIGNED,"random", false, builtin_random, 
+    { M1TYPE_UNSIGNED,(char*)"random", false, builtin_random, 
       {BUILTIN_ARG_END,} },
 
-    { M1TYPE_UNSIGNED,"printf", false, builtin_printf,
+    { M1TYPE_UNSIGNED,(char*)"printf", false, builtin_printf,
       {M1TYPE_STRING,BUILTIN_ARG_VARG,BUILTIN_ARG_END} },
 
-    { M1TYPE_STRING,"sprintf", false, builtin_sprintf,
+    { M1TYPE_STRING,(char*)"sprintf", false, builtin_sprintf,
       {M1TYPE_STRING,BUILTIN_ARG_VARG,BUILTIN_ARG_END} },
 
-    { M1TYPE_STRING, "getenv", false, builtin_getenv,
+    { M1TYPE_STRING, (char*) "getenv", false, builtin_getenv,
       {M1TYPE_STRING,BUILTIN_ARG_END} },
 
-    { M1TYPE_UNSIGNED, "reload_m1", false, builtin_reload_m1,
+    { M1TYPE_UNSIGNED, (char*) "reload_m1", false, builtin_reload_m1,
       { BUILTIN_ARG_END} },
 
-    { M1TYPE_UNSIGNED, "reload_lib", false, builtin_reload_lib,
+    { M1TYPE_UNSIGNED, (char*) "reload_lib", false, builtin_reload_lib,
       { BUILTIN_ARG_END} },
 
-    { M1TYPE_UNSIGNED, "reboot", false, builtin_reboot,
+    { M1TYPE_UNSIGNED, (char*) "reboot", false, builtin_reboot,
       { BUILTIN_ARG_END} },
 
-    { M1TYPE_BOOL, "debug", false, builtin_debug,
+    { M1TYPE_BOOL, (char*) "debug", false, builtin_debug,
       { BUILTIN_ARG_END} },
 
     // Array operations
-    { M1TYPE_UNSIGNED,"size", false, builtin_size,
+    { M1TYPE_UNSIGNED,(char*)"size", false, builtin_size,
       {M1TYPE_ARRAY,BUILTIN_ARG_END} },
 
-    { M1TYPE_VOID,"rotate", false, builtin_rotate,
+    { M1TYPE_VOID,(char*)"rotate", false, builtin_rotate,
       {M1TYPE_ARRAY,M1TYPE_SIGNED,BUILTIN_ARG_END} },
 
-    { M1TYPE_VOID,"reverse", false, builtin_reverse,
+    { M1TYPE_VOID,(char*)"reverse", false, builtin_reverse,
       {M1TYPE_ARRAY,BUILTIN_ARG_END} },
 
-    { M1TYPE_VOID,"swap", false, builtin_swap,
+    { M1TYPE_VOID,(char*)"swap", false, builtin_swap,
       {M1TYPE_ARRAY,M1TYPE_SIGNED, M1TYPE_SIGNED, BUILTIN_ARG_END} },
 
-    { M1TYPE_VOID,"sort", false, builtin_sort,
+    { M1TYPE_VOID,(char*)"sort", false, builtin_sort,
       {M1TYPE_ARRAY,BUILTIN_ARG_END} },
 
-    { M1TYPE_VOID,"sort", false, builtin_sort_index,
+    { M1TYPE_VOID,(char*)"sort", false, builtin_sort_index,
       {M1TYPE_ARRAY,M1TYPE_SIGNED,BUILTIN_ARG_END} },
 
-    { M1TYPE_SIGNED, "wcolumns", false, builtin_wcolumns,
+    { M1TYPE_SIGNED, (char*) "wcolumns", false, builtin_wcolumns,
       { M1TYPE_STRING, M1TYPE_STRING, M1TYPE_ARRAY, BUILTIN_ARG_END} },
 
-    { M1TYPE_SIGNED, "rcolumns", false, builtin_rcolumns,
+    { M1TYPE_SIGNED, (char*) "rcolumns", false, builtin_rcolumns,
       { M1TYPE_STRING, M1TYPE_STRING, M1TYPE_ARRAY, BUILTIN_ARG_END} },
 
-    { M1TYPE_SIGNED, "rwcolumns", false, builtin_rwcolumns,
+    { M1TYPE_SIGNED, (char*) "rwcolumns", false, builtin_rwcolumns,
       {M1TYPE_STRING, 
        M1TYPE_STRING, M1TYPE_ARRAY,
        M1TYPE_STRING, M1TYPE_ARRAY,
@@ -2826,50 +2826,50 @@ static UBuiltin m1_builtin[] =
     //
     //  Object functions
     //
-    { M1TYPE_OBJECT, "clone", false, builtin_clone,
+    { M1TYPE_OBJECT, (char*) "clone", false, builtin_clone,
       {M1TYPE_OBJECT, BUILTIN_ARG_END}  },
 
-    { M1TYPE_OBJECT, "copy", false, builtin_copy,
+    { M1TYPE_OBJECT, (char*) "copy", false, builtin_copy,
       {M1TYPE_OBJECT, BUILTIN_ARG_END}  },
 
     //
     // String ops.
     //
-    { M1TYPE_UNSIGNED,"size", true, builtin_strsize,
+    { M1TYPE_UNSIGNED,(char*)"size", true, builtin_strsize,
       {M1TYPE_STRING,BUILTIN_ARG_END} },
 
-    { M1TYPE_UNSIGNED, "strlen", true, builtin_strlen, 
+    { M1TYPE_UNSIGNED, (char*) "strlen", true, builtin_strlen, 
       { M1TYPE_STRING, BUILTIN_ARG_END } },
 
-    { M1TYPE_STRING, "strcat", true, builtin_strcat, 
+    { M1TYPE_STRING, (char*) "strcat", true, builtin_strcat, 
       { M1TYPE_STRING, M1TYPE_STRING, BUILTIN_ARG_END } },
 
-    { M1TYPE_STRING, "substr", true, builtin_substr_3, 
+    { M1TYPE_STRING, (char*) "substr", true, builtin_substr_3, 
       { M1TYPE_STRING, M1TYPE_UNSIGNED, M1TYPE_UNSIGNED, BUILTIN_ARG_END } },
 
-    { M1TYPE_STRING, "substr", true, builtin_substr_2, 
+    { M1TYPE_STRING, (char*) "substr", true, builtin_substr_2, 
       { M1TYPE_STRING, M1TYPE_UNSIGNED, BUILTIN_ARG_END } },
 
-    { M1TYPE_SIGNED, "strchr", true, builtin_strchr, 
+    { M1TYPE_SIGNED, (char*) "strchr", true, builtin_strchr, 
       { M1TYPE_STRING, M1TYPE_CHAR, BUILTIN_ARG_END } },
 
-    { M1TYPE_SIGNED, "atoi", true, builtin_atoi, 
+    { M1TYPE_SIGNED, (char*) "atoi", true, builtin_atoi, 
       { M1TYPE_STRING, BUILTIN_ARG_END } },
 
-    { M1TYPE_UNSIGNED, "atou", true, builtin_atou, 
+    { M1TYPE_UNSIGNED, (char*) "atou", true, builtin_atou, 
       { M1TYPE_STRING, BUILTIN_ARG_END } },
 
-    { M1TYPE_FLOAT, "atof", true, builtin_atof, 
+    { M1TYPE_FLOAT, (char*) "atof", true, builtin_atof, 
       { M1TYPE_STRING, BUILTIN_ARG_END } },
 
     //
     //  Event functions
     //
 
-    { M1TYPE_SIGNED, "updated", false, builtin_updated,
+    { M1TYPE_SIGNED, (char*) "updated", false, builtin_updated,
       { M1TYPE_EVENT, BUILTIN_ARG_END }},
 
-    { M1TYPE_STRING, "sender", false, builtin_sender,
+    { M1TYPE_STRING, (char*) "sender", false, builtin_sender,
       { M1TYPE_EVENT, BUILTIN_ARG_END }},
  
     { M1TYPE_NONE, NULL,     false,  NULL,             {BUILTIN_ARG_END,}}
@@ -3332,7 +3332,7 @@ VmMain::VmMain(CExecutor* aExec, CBaseType* aType) :
     m1AvgSweepTime.putValue(aExec, 0);
     m1AvgRedrawTime.putValue(aExec, 0);
 
-    cstr = m1New(CString, VERSION);
+    cstr = m1New(CString, (char*)VERSION);
     m1Version = m1RetainString(cstr);
 
     cstr = m1New(CString, ser);
@@ -3665,7 +3665,7 @@ void CExecutable::addUpdatedEvent(CExecutor* aExec, CEvent *aUpdated)
 #ifdef DEBUG
     for (CEvent* ptr = mUpdatedEvents; ptr; ptr = ptr->getNextUpdated()) {
 	if (ptr == aUpdated) 
-	    m1BreakHere(__FILE__, __LINE__, "already updated");
+	    m1BreakHere(__FILE__, __LINE__, (char*) "already updated");
     }
 #endif
     aUpdated->setMarked();                     // mark event as in list
@@ -4653,7 +4653,7 @@ void CStringType::print(ostream* os, UData a)
 	    case '"':  *os << "\\\""; break;
 	    default:
 		if (isprint(c)) {
-		    char s[2] = {c,0};
+		    char s[2] = {(char) c,0};
 		    *os << s;
 		}
 		else {
@@ -4730,7 +4730,7 @@ CType* CEventType::createType(CType* aType, bool aQueued, int aDirection)
     default: break;
     }
 
-    t = m1TypeFmtLookup("%s%s", eName.c_str(), aType->cname());
+    t = m1TypeFmtLookup((char*)"%s%s", eName.c_str(), aType->cname());
     if (t == NULL)
 	return m1New(CEventType, aType, aQueued, aDirection);
     return t;
@@ -7564,11 +7564,11 @@ CVTfu:
     NEXT(I);
 
 UNDEF:
-    m1BreakHere(__FILE__, __LINE__, "operation not defined");
+    m1BreakHere(__FILE__, __LINE__, (char*)"operation not defined");
     throw M1StatusError;
 
 NYI:
-    m1BreakHere(__FILE__, __LINE__, "operation not implemented");
+    m1BreakHere(__FILE__, __LINE__, (char*)"operation not implemented");
     throw M1StatusError;
 
 swapout:
@@ -7812,27 +7812,27 @@ init:
 //
 u_int8_t* VmMachineType::loadPreScript(u_int8_t* ptr,u_int8_t* ptr_end)
 {
-    return loadCode("Script", ptr, ptr_end, &mPreScript);
+    return loadCode((char*)"Script", ptr, ptr_end, &mPreScript);
 }
 
 u_int8_t* VmMachineType::loadPostScript(u_int8_t* ptr,u_int8_t* ptr_end)
 {
-    return loadCode("Script", ptr, ptr_end, &mPostScript);
+    return loadCode((char*)"Script", ptr, ptr_end, &mPostScript);
 }
 
 u_int8_t* VmMachineType::loadConstructor(u_int8_t* ptr,u_int8_t* ptr_end)
 {
-    return loadCode("Construct", ptr, ptr_end, &mConstructor);
+    return loadCode((char*)"Construct", ptr, ptr_end, &mConstructor);
 }
 
 u_int8_t* VmMachineType::loadDestructor(u_int8_t* ptr,u_int8_t* ptr_end)
 {
-    return loadCode("Destruct", ptr, ptr_end, &mDestructor);
+    return loadCode((char*)"Destruct", ptr, ptr_end, &mDestructor);
 }
 
 u_int8_t* VmMachineType::loadDefaults(u_int8_t* ptr,u_int8_t* ptr_end)
 {
-    return loadCode("Defaults", ptr, ptr_end, &mDefaults);
+    return loadCode((char*)"Defaults", ptr, ptr_end, &mDefaults);
 }
 
 

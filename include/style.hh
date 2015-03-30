@@ -6,7 +6,7 @@
 #ifndef __STYLE_HH__
 #define __STYLE_HH__
 
-#include "epic.h"
+#include "epx.h"
 #include "m1.hh"
 #include "font_cache.hh"
 
@@ -41,36 +41,36 @@ ENUM_TYPE(CHAlign, "HAlign",
 	  ENUMERATION(scale,   HALIGN_SCALE));
 
 ENUM_TYPE(CFontWeight, "FontWeight",
-	  ENUMERATION(none, EFONT_WEIGHT_NONE),
-	  ENUMERATION(medium, EFONT_WEIGHT_MEDIUM),
-	  ENUMERATION(bold, EFONT_WEIGHT_BOLD),
-	  ENUMERATION(demiBold, EFONT_WEIGHT_DEMIBOLD));
+	  ENUMERATION(none, EPX_FONT_WEIGHT_NONE),
+	  ENUMERATION(medium, EPX_FONT_WEIGHT_MEDIUM),
+	  ENUMERATION(bold, EPX_FONT_WEIGHT_BOLD),
+	  ENUMERATION(demiBold, EPX_FONT_WEIGHT_DEMIBOLD));
 
 ENUM_TYPE(CFontSlant, "FontSlant",
-	  ENUMERATION(none, EFONT_SLANT_NONE),
-	  ENUMERATION(roman, EFONT_SLANT_ROMAN),
-	  ENUMERATION(italic, EFONT_SLANT_ITALIC),
-	  ENUMERATION(oblique, EFONT_SLANT_OBLIQUE));
+	  ENUMERATION(none, EPX_FONT_SLANT_NONE),
+	  ENUMERATION(roman, EPX_FONT_SLANT_ROMAN),
+	  ENUMERATION(italic, EPX_FONT_SLANT_ITALIC),
+	  ENUMERATION(oblique, EPX_FONT_SLANT_OBLIQUE));
 
 ENUM_TYPE(CFontWidth, "FontWidth",
-	  ENUMERATION(none, EFONT_WIDTH_NONE),
-	  ENUMERATION(normal, EFONT_WIDTH_NORMAL),
-	  ENUMERATION(condensed, EFONT_WIDTH_CONDENSED),
-	  ENUMERATION(narrow, EFONT_WIDTH_NARROW),
-	  ENUMERATION(doubleWide, EFONT_WIDTH_DOUBLE_WIDE));
+	  ENUMERATION(none, EPX_FONT_WIDTH_NONE),
+	  ENUMERATION(normal, EPX_FONT_WIDTH_NORMAL),
+	  ENUMERATION(condensed, EPX_FONT_WIDTH_CONDENSED),
+	  ENUMERATION(narrow, EPX_FONT_WIDTH_NARROW),
+	  ENUMERATION(doubleWide, EPX_FONT_WIDTH_DOUBLE_WIDE));
 
 ENUM_TYPE(CFontStyle, "FontStyle",
-	  ENUMERATION(none, EFONT_STYLE_NONE),
-	  ENUMERATION(serif, EFONT_STYLE_SERIF),
-	  ENUMERATION(sansSerif, EFONT_STYLE_SANS_SERIF),
-	  ENUMERATION(informal, EFONT_STYLE_INFORMAL),
-	  ENUMERATION(decorated, EFONT_STYLE_DECORATED));
+	  ENUMERATION(none, EPX_FONT_STYLE_NONE),
+	  ENUMERATION(serif, EPX_FONT_STYLE_SERIF),
+	  ENUMERATION(sansSerif, EPX_FONT_STYLE_SANS_SERIF),
+	  ENUMERATION(informal, EPX_FONT_STYLE_INFORMAL),
+	  ENUMERATION(decorated, EPX_FONT_STYLE_DECORATED));
 
 ENUM_TYPE(CFontSpacing, "FontSpacing",
-	  ENUMERATION(none, EFONT_SPACING_NONE),
-	  ENUMERATION(proportional, EFONT_SPACING_PROPORTIONAL),
-	  ENUMERATION(monoSpaced, EFONT_SPACING_MONOSPACED),
-	  ENUMERATION(charCell, EFONT_SPACING_MONOSPACED));
+	  ENUMERATION(none, EPX_FONT_SPACING_NONE),
+	  ENUMERATION(proportional, EPX_FONT_SPACING_PROPORTIONAL),
+	  ENUMERATION(monoSpaced, EPX_FONT_SPACING_MONOSPACED),
+	  ENUMERATION(charCell, EPX_FONT_SPACING_MONOSPACED));
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -185,8 +185,8 @@ public:
     string name(void) { return mName.value(); }
     CFont* font(void) { return mFont; }
 
-    EGc*   epicContext(void)     { return &mGC; }
-    EFont* epicFont(void)        { return mFont ? mFont->epicFont() : NULL; }
+    epx_gc_t*   epxContext(void)     { return &mGC; }
+    epx_font_t* epxFont(void)        { return mFont ? mFont->epxFont() : NULL; }
 
     void execute(CExecutor* aExec);
     void start(CExecutor* aExec);
@@ -204,8 +204,8 @@ private:
     EventUnsigned  mBorderWidth;
     EventString    mFontName;
     EventUnsigned  mFontSize;
-    EventEnum<EFontWeight> mFontWeight;
-    EventEnum<EFontSlant> mFontSlant;
+    EventEnum<epx_font_weight_t> mFontWeight;
+    EventEnum<epx_font_slant_t> mFontSlant;
     EventUnsigned mFontColor;
     EventSigned   mGlyphDeltaX;      // fixed kerning
     EventSigned   mGlyphDeltaY;      // fixed kerning
@@ -213,7 +213,7 @@ private:
     EventUnsigned mGlyphFixedWidth;  // fixe glyph width
 
     CFont* mFont;
-    EGc    mGC;
+    epx_gc_t    mGC;
 };
 
 

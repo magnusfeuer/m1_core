@@ -29,7 +29,7 @@ CFFT::CFFT(size_t n)
 	m++;
     }
     if ((int) n < k) {
-	fprintf(stderr, "fft: size adjusted from %lu to %d\n", n, k);
+	fprintf(stderr, "fft: size adjusted from %u to %d\n", n, k);
 	mSize = k;
     }
     else

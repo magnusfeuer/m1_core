@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 
 #include "m1.hh"
-#include "epic.h"
+#include "epx.h"
 #if BYTE_ORDER == BIG_ENDIAN
 /* MUST BE DEFINED FOR AVUTIL to work !!! */
 #define WORDS_BIGENDIAN  
@@ -427,7 +427,7 @@ loop:
     return false;
 }
 
-void CVideoComponent::writeFrame(EPixmap* aPixmap)
+void CVideoComponent::writeFrame(epx_pixmap_t* aPixmap)
 {
     AVStream *st;
     AVCodecContext *c;
@@ -438,7 +438,7 @@ void CVideoComponent::writeFrame(EPixmap* aPixmap)
     if (!mOutCtx.is_open || (mOutCtx.video_index < 0))
 	return;
 
-    sfmt = pixelType2PixelFormat(aPixmap->pixelType);
+    sfmt = pixelType2PixelFormat(aPixmap->pixel_format);
     st = mOutCtx.format->streams[mOutCtx.video_index];
     c = st->codec;
 	
@@ -452,7 +452,7 @@ void CVideoComponent::writeFrame(EPixmap* aPixmap)
     src_data[0] = aPixmap->data;
     src_data[1] = src_data[2] = src_data[3] = NULL;
 
-    src_linesize[0] = aPixmap->bytesPerRow;
+    src_linesize[0] = aPixmap->bytes_per_row;
     src_linesize[1] = src_linesize[2] = src_linesize[3] = 0;
 
     sws_scale(mSwsContext2, src_data, src_linesize, 0,
@@ -756,16 +756,16 @@ void CVideoComponent::execute(CExecutor* aExec)
 }
 
 // Scale mFrame (always) and convert to destination format
-EPixmap* CVideoComponent::scaleFrame(CRedrawContext *aContext)
+epx_pixmap_t* CVideoComponent::scaleFrame(CRedrawContext *aContext)
 {
 #ifdef USE_FFMPEG
     u_int8_t* dst_data[4];
     int       dst_linesize[4];
-    int       dfmt = pixelType2PixelFormat(aContext->mPixmap->pixelType);
+    int       dfmt = pixelType2PixelFormat(aContext->mPixmap->pixel_format);
     AVStream* st;
     AVCodecContext *c;
     int       sfmt;
-    EPixmap*  dImage;
+    epx_pixmap_t*  dImage;
     AVFrame*  frame;
     SwsContext* sws;
 
@@ -789,15 +789,15 @@ EPixmap* CVideoComponent::scaleFrame(CRedrawContext *aContext)
 	return NULL;
 
     // Fixme: we may want to cache the dImage ?
-    if ((dImage = EPixmapCreate(int(aContext->cWidth),
-				int(aContext->cHeight),
-				aContext->mPixmap->pixelType)) == NULL)
+    if ((dImage = epx_pixmap_create(int(aContext->cWidth),
+				    int(aContext->cHeight),
+				    aContext->mPixmap->pixel_format)) == NULL)
 	return NULL;
 
     dst_data[0] = dImage->data;
     dst_data[1] = dst_data[2] = dst_data[3] = NULL;
 
-    dst_linesize[0] = dImage->bytesPerRow;
+    dst_linesize[0] = dImage->bytes_per_row;
     dst_linesize[1] = dst_linesize[2] = dst_linesize[3] = 0;
 
     sws_scale(sws, frame->data, frame->linesize, 0,
@@ -812,10 +812,10 @@ EPixmap* CVideoComponent::scaleFrame(CRedrawContext *aContext)
 
 void CVideoComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
 {
-    EGc* gc;
+    epx_gc_t* gc;
     u_int8_t fader;
-    EPixmap* sImage;
-    EPixel_t color;
+    epx_pixmap_t* sImage;
+    epx_pixel_t color;
 
     if (!aContext || !aContext->mPixmap) {
 	DBGFMT_WARN("CImageComponent::redraw(): No context provided.");
@@ -825,25 +825,25 @@ void CVideoComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
     gc = aContext->mGc;
     fader = gc->fader_value;
 
-    EGcSetBorderWidth(gc, mBorderWidth.value());
+    epx_gc_set_border_width(gc, mBorderWidth.value());
 
     if (mBorderWidth.value()) {
 	color.px = mBorderColor.value();
 	color.a  = 255;
 	if (fader != ALPHA_FACTOR_1)
 	    color.a = (color.a * fader) >> 8;
-	EGcSetBorderColor(gc, color);
+	epx_gc_set_border_color(gc, color);
     }
 
     if ((sImage = scaleFrame(aContext)) == NULL)
 	return;
 
-    EPixmapAlphaArea(sImage, aContext->mPixmap,
+    epx_pixmap_alpha_area(sImage, aContext->mPixmap,
 		     fader,
 		     0, 0,
 		     int(aContext->lLeft), 
 		     int(aContext->lTop),
 		     sImage->width, sImage->height);
     if (sImage)
-	EPixmapDestroy(sImage);
+	epx_pixmap_destroy(sImage);
 }
