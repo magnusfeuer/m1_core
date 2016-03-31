@@ -174,15 +174,15 @@ endif
 
 
 ifeq ($(TYPE), debug)
-COMPILE_FLAGS= -g -DUSE_ETHREAD -D_THREAD_SAFE -D_REENTRANT -DDEBUG -msse2
+COMPILE_FLAGS= -g -DUSE_ETHREAD -D_THREAD_SAFE -D_REENTRANT -DDEBUG 
 EPIC_LIB = ../epic/lib/debug/epic.a
 else
 ifeq ($(TYPE), prof)
-COMPILE_FLAGS= -pg -msse2
+COMPILE_FLAGS= -pg 
 LDFLAGS += -pg
 EPIC_LIB = ../epic/lib/release/epic.a
 else  # drm or release
-COMPILE_FLAGS=-O3 -DUSE_ETHREAD -D_THREAD_SAFE -D_REENTRANT -msse2
+COMPILE_FLAGS=-O3 -DUSE_ETHREAD -D_THREAD_SAFE -D_REENTRANT 
 EPIC_LIB = ../epic/lib/release/epic.a
 endif
 endif
