@@ -10,7 +10,7 @@
 #include "component.hh"
 #include <sys/types.h>
 
-#include "epic.h"
+#include "epx.h"
 
 //
 // A Image file component.
@@ -64,7 +64,7 @@ private:
     EventUnsigned mBorderWidth;
     EventUnsigned mBorderColor;
 
-    EPixmap* mImage;   // current pixmap
+    epx_pixmap_t* mImage;   // current pixmap
     int mPixelType;    // Pixel type to use when loading image
     bool mUseAlpha;    // Image has some pixels with alpha info
 };

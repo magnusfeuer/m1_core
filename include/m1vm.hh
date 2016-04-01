@@ -239,8 +239,8 @@ enum M1Status {
 
 class VmMain : public CExecutable {
 public:
-    XOBJECT_TYPE(VmMain, "VmMain",
-		 "M1 main program",
+    XOBJECT_TYPE(VmMain, (char*) "VmMain",
+		 (char*) "M1 main program",
 		 (VmMain_version,
 		  VmMain_serial,
 		  VmMain_halt,
@@ -250,12 +250,12 @@ public:
 		  VmMain_argv),
 		 XFIELDC(VmMain,Q_PUBLIC,version,
 			string_type(),
-			"Version of M1 runtime system",
-			UString(m1New(CString, VERSION))),
+			 "Version of M1 runtime system",
+			 UString(m1New(CString, (char*) VERSION))),
 		 XFIELDC(VmMain,Q_PUBLIC,serial,
-			string_type(),
-			"Serial number of m1 device, as read from /m1/serial.txt",
-			UString(m1New(CString, ""))),
+			 string_type(),
+			 "Serial number of m1 device, as read from /m1/serial.txt",
+			 UString(m1New(CString,(char*) ""))),
 		 XFIELD(VmMain,Q_PUBLIC,halt,
 			input_signed_type(),
 			"Halt the M1 system after N cycles"),

@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include "epic.h"
+#include "epx.h"
 #include "m1.hh"
 #include "style.hh"
 #include "message.hh"
@@ -126,18 +126,18 @@ public:
     // and pass it on to its children.
     //
     struct CRedrawContext {
-	EPixmap* mPixmap;    // Pixmap to draw in.
-	EGc*     mGc;        // Graphic context
-	float lTop;          // scaled layer top
-	float lLeft;         // scaled layer left
-	float lWidth;        // scaled layer width
-	float lHeight;       // scaled layer height
-	float cWidth;        // scaled content width
-	float cHeight;       // scaled content height
-	float mTransparency; // Transparency value to use when drawing.
-	float mVscale;       // Scale vertical (1.0 = normal scale).
-	float mHscale;       // Scale horizontal (1.0 = normal scale).
-	ERect_t mClipRect;   // Current clipping rectangle
+	epx_pixmap_t* mPixmap; // Pixmap to draw in.
+	epx_gc_t* mGc;         // Graphic context
+	float lTop;            // scaled layer top
+	float lLeft;           // scaled layer left
+	float lWidth;          // scaled layer width
+	float lHeight;         // scaled layer height
+	float cWidth;          // scaled content width
+	float cHeight;         // scaled content height
+	float mTransparency;   // Transparency value to use when drawing.
+	float mVscale;         // Scale vertical (1.0 = normal scale).
+	float mHscale;         // Scale horizontal (1.0 = normal scale).
+	epx_rect_t mClipRect;  // Current clipping rectangle
     };
 
 
@@ -174,8 +174,8 @@ public:
 
     bool canScale(CRedrawContext* aContext);
     bool needScale(CRedrawContext* aContext);
-    void scaleImage(EPixmap* aSrcImage, EPixmap* aDstImage, bool aScaleAlpha);
-    void redrawScaled(CRedrawContext *aContext, EPixmap* aDstPixmap);
+    void scaleImage(epx_pixmap_t* aSrcImage, epx_pixmap_t* aDstImage, bool aScaleAlpha);
+    void redrawScaled(CRedrawContext *aContext, epx_pixmap_t* aDstPixmap);
 
     // Redraw the children list
     void redrawChildren(CSystem* aSys, CRedrawContext *aContext);
@@ -221,7 +221,7 @@ public:
     
 protected:
     void intersectClip(CRedrawContext &aContext);
-    void initContext(CRedrawContext &aContext, EGc* aGc);
+    void initContext(CRedrawContext &aContext, epx_gc_t* aGc);
     void modifyContext(CRedrawContext &aContext);
 
     bool styleChanged(void);

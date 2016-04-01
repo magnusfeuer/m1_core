@@ -7,8 +7,8 @@
 #ifndef __SCREEN_COMPONENT_H__
 #define __SCREEN_COMPONENT_H__
 
-#include "epic.h"
-#include "epic_thread.hh"
+#include "epx.h"
+#include "epx_thread.hh"
 #include "component.hh"
 #include "video_component.hh"
 
@@ -17,9 +17,9 @@
 #endif
 
 #ifdef USE_ETHREAD
-#define EPIC_BUFFERS 2
+#define EPX_BUFFERS 2
 #else
-#define EPIC_BUFFERS 1
+#define EPX_BUFFERS 1
 #endif
 
 
@@ -167,23 +167,23 @@ public:
     void enterGraphicsMode(CExecutor* aExec);
     void changeResolution(void);
 
-    EBackend* backend(void) { return mBackend; }
-//    EPixmap *pixmap(void) { return mBuffer; }
+    epx_backend_t* backend(void) { return mBackend; }
+//    epx_pixmap_t *pixmap(void) { return mBuffer; }
 
     // Return screen resolution in DPI
     int resolution_x(void);
     int resolution_y(void);
 private:
-    void setupEpicParam(EDict *aParam);
+    void setupEpxParam(epx_dict_t *aParam);
     void setup(CExecutor* aExec, bool aStart);
     int curWidth;
     int curHeight;
     int curBuf;
     bool mInGraphicsMode;
     EThread*  mThread;
-    EBackend* mBackend;
-    EPixmap*  mBuffer[EPIC_BUFFERS];
-    EWindow*  mWindow;
+    epx_backend_t* mBackend;
+    epx_pixmap_t*  mBuffer[EPX_BUFFERS];
+    epx_window_t*  mWindow;
     
     EventString mBackendType;
     int mPixelType;

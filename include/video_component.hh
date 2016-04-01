@@ -9,7 +9,7 @@
 
 #include <sys/types.h>
 
-#include "epic.h"
+#include "epx.h"
 #include "m1.hh"
 #include "component.hh"
 
@@ -103,14 +103,14 @@ public:
     void execute(CExecutor* aExec);
     void start(CExecutor* aExec);
 
-    void writeFrame(EPixmap* aPixmap);
+    void writeFrame(epx_pixmap_t* aPixmap);
 private:
     bool open(CExecutor* aExec);
     bool openIn(CExecutor* aExec, VideoCtx* ctx);
     bool openOut(CExecutor* aExec, VideoCtx* ctx);
     bool readFrame();
     void close();
-    EPixmap* scaleFrame(CRedrawContext *aContext);
+    epx_pixmap_t* scaleFrame(CRedrawContext *aContext);
 
     EventString mStreamName;          // file name of stream or device name
     EventBool   mLoop;                // loop at end frame (if possible)

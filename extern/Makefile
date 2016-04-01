@@ -5,7 +5,8 @@ OSNAME := $(shell uname -s)
 
 .PHONY: all spline2
 
-all: lib/libavcodec.a lib/libssl.a  spline2 bin/bison
+#all: lib/libavcodec.a lib/libssl.a  spline2 bin/bison
+all:  spline2 bin/bison lib/libavcodec.a
 
 spline2:
 	(cd spline2; make)

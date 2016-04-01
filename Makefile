@@ -1,10 +1,13 @@
 #
 # Top level makefile
 #
-all: release debug drm 
+all: debug 
+# all: release debug drm 
+
 include Version.inc
 
 BINDIR:=$(PWD)/../bin
+EPX_CLONE_TRIGGER=./epx/.git/HEAD
 
 #
 # Build core m1 distro with no skins
@@ -58,35 +61,35 @@ debug_dpf:
 release: src/Makefile
 	(cd extern; make)
 	(cd src; make rtlib)
-	(rm -f epic/obj/release/epic_backend.o; cd epic/src; make release)
+#	(rm -f epic/obj/release/epic_backend.o; cd epic/src; make release)
 	(cd src; make release)
 	(cd tools; make)
 
 
 drm: src/Makefile
 	(cd extern; make)
-	(rm -f epic/obj/release/epic_backend.o; cd epic/src; make release)
+#	(rm -f epic/obj/release/epic_backend.o; cd epic/src; make release)
 	(cd src; make drm)
 	(cd tools; make)
 
 release_with_x11:
 	(cd extern; make)
 	(cd src; make rtlib)
-	(rm -f epic/obj/release/epic_backend.o; cd epic/src; make release WITH_X11=1)
+#	(rm -f epic/obj/release/epic_backend.o; cd epic/src; make release WITH_X11=1)
 	(cd src; make release WITH_X11=1)
 	(cd tools; make)
 
-debug:
+debug:  src/Makefile $(EPX_CLONE_TRIGGER)
 	(cd extern; make)
 	(cd src; make rtlib)
-	(rm -f epic/obj/debug/epic_backend.o; cd epic/src; make debug WITH_X11=1)
+#	(rm -f epic/obj/debug/epic_backend.o; cd epic/src; make debug WITH_X11=1)
 	(cd src; make debug WITH_X11=1)
 	(cd tools; make)
 
-debug_no_x11:
+debug_no_x11: src/Makefile $(EPX_CLONE_TRIGGER)
 	(cd extern; make)
 	(cd src; make rtlib)
-	(rm -f epic/obj/debug/epic_backend.o; cd epic/src; make debug)
+#	(rm -f epic/obj/debug/epic_backend.o; cd epic/src; make debug)
 	(cd src; make debug)
 	(cd tools; make)
 
@@ -94,11 +97,11 @@ clean:
 	-(cd tools; make clean)
 	-(cd extern; make clean)
 	-(cd src; make clean)
-	-(cd epic/src; make clean clean_debug)
+#	-(cd epic/src; make clean clean_debug)
 
 light_clean:
 	-(cd src; make clean)
-	-(cd epic/src; make clean clean_debug)
+#	-(cd epic/src; make clean clean_debug)
 	-(cd tools; make clean)
 
 doc:	FORCE
@@ -118,4 +121,12 @@ configure: configure.ac
 FORCE:
 
 spotless: clean
+	(cd epx; make clean)
 	rm -rf autom4te.cache config.status configure config.log src/Makefile
+
+
+$(EPX_CLONE_TRIGGER):
+	@echo
+	@echo "--- Checking out epx."
+	git clone -b $(EPX_GIT_BRANCH) $(EPX_GIT_REPO) epx
+

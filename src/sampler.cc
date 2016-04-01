@@ -85,11 +85,14 @@ void CSamplerBase::addSample(CExecutor* aExec,float aValue, Time aTimeStamp)
     CSampleData *new_sample =  m1New(CSampleData, CSampleData::CSampleDataType::singleton());
 
     // Size up in chunks of 25%
-    if (values->size() == mSampleCount.value()) 
-	if (mSampleCount.value() == 0.0)
+    if (values->size() == mSampleCount.value()) {
+	if (mSampleCount.value() == 0.0) {
 	    values->resize(500);
-	else
+	}
+	else {
 	    values->resize(int(float(mSampleCount.value())*1.25));
+	}
+    }
 
     new_sample->val(aValue);
     new_sample->ts(aTimeStamp);

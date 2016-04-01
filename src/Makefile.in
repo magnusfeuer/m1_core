@@ -95,8 +95,8 @@ STD_SRC = \
 	input_strategy.cc \
 	input_device.cc \
 	file_source.cc \
-	epic_input_device.cc \
-	epic_thread.cc \
+	epx_input_device.cc \
+	epx_thread.cc \
 	database.cc \
 	db_component.cc \
 	dds_file.cc \
@@ -152,7 +152,7 @@ M1C_OBJ = $(M1C_SRC:%.cc=$(OBJDIR)/%.o)
 M1VM_TEST_OBJ = $(M1VM_TEST_SRC:%.cc=$(OBJDIR)/%.o)
 M1_TYPEINFO_OBJ = $(M1_TYPEINFO_SRC:%.cc=$(OBJDIR)/%.o)
 
-EPIC_INCDIR = ../epic/include
+EPX_INCDIR = ../epx/include
 
 X11_LIB=
 CARBON_LIB=
@@ -169,21 +169,23 @@ OS_CFLAGS= -DDARWIN=1  -I/opt/local/include -mdynamic-no-pic
 LDFLAGS:=-Wl,-search_paths_first -sectcreate __TEXT __info_plist m1.plist
 else
 OS_CFLAGS= -rdynamic
-LDFLAGS:=-rdynamic -lpthread
+LDFLAGS:=-lGL -rdynamic -lpthread
 endif
 
 
 ifeq ($(TYPE), debug)
+# COMPILE_FLAGS= -g -DUSE_ETHREAD -D_THREAD_SAFE -D_REENTRANT -DDEBUG -msse2
 COMPILE_FLAGS= -g -DUSE_ETHREAD -D_THREAD_SAFE -D_REENTRANT -DDEBUG 
-EPIC_LIB = ../epic/lib/debug/epic.a
+EPX_LIB = ../epx/lib/debug/epx.a
 else
 ifeq ($(TYPE), prof)
 COMPILE_FLAGS= -pg 
 LDFLAGS += -pg
-EPIC_LIB = ../epic/lib/release/epic.a
+EPX_LIB = ../epx/lib/release/epx.a
 else  # drm or release
-COMPILE_FLAGS=-O3 -DUSE_ETHREAD -D_THREAD_SAFE -D_REENTRANT 
-EPIC_LIB = ../epic/lib/release/epic.a
+# COMPILE_FLAGS=-O3 -DUSE_ETHREAD -D_THREAD_SAFE -D_REENTRANT -msse2
+COMPILE_FLAGS=-O3 -DUSE_ETHREAD -D_THREAD_SAFE -D_REENTRANT
+EPX_LIB = ../epx/lib/release/epx.a
 endif
 endif
 
@@ -192,16 +194,16 @@ COMPILE_FLAGS:= $(COMPILE_FLAGS) -DM1_DRM=1
 endif
 
 # common compile flags
-COMMON_CFLAGS=-DVERSION=\"$(VERSION)\" -Wall -I../extern/include  @FFMPEG_INCLUDE@ -I$(INCDIR) -I$(EPIC_INCDIR) $(PNG_CFLAGS) $(JPEG_CFLAGS) -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DUSE_FFMPEG  
+COMMON_CFLAGS=-DVERSION=\"$(VERSION)\" -Wall -Wno-write-strings -I../extern/include  @FFMPEG_INCLUDE@ -I$(INCDIR) -I$(EPX_INCDIR) $(PNG_CFLAGS) $(JPEG_CFLAGS) -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DUSE_FFMPEG  
 
 # combined compile flags
 CXXFLAGS:= $(COMMON_CFLAGS) $(COMPILE_FLAGS) $(OS_CFLAGS) $(CFLAGS)
 
-LIBS = -L../extern/lib $(FFMPEG_LIB) $(OPENSSL_LIB)  $(CARBON_LIB) $(EPIC_LIB) $(PNG_LFLAGS) $(JPEG_LFLAGS) $(JPEG_LIBS) $(X11_LIB)  -lm -ldl -lz
+LIBS = -L../extern/lib $(FFMPEG_LIB) $(OPENSSL_LIB)  $(CARBON_LIB) $(EPX_LIB) $(PNG_LFLAGS) $(JPEG_LFLAGS) $(JPEG_LIBS) $(X11_LIB)  -lm -ldl -lz
 #
 # Debug entry points (default)
 #
-all:   rtlib debug release drm # $(M1E_TARGET) $(M1C_TARGET) $(M1VM_TEST_TARGET) $(M1_TYPEINFO_TARGET)
+all:   rtlib debug # release drm # $(M1E_TARGET) $(M1C_TARGET) $(M1VM_TEST_TARGET) $(M1_TYPEINFO_TARGET)
 
 debug:
 	$(MAKE) TYPE=debug m1e_target m1c_target
@@ -253,30 +255,26 @@ m1_typeinfo:
 
 
 rtlib:  ../obj
-	$(MAKE) TYPE=drm ../obj/drm/m1rt.a
-	$(MAKE) TYPE=release ../obj/release/m1rt.a
+#	$(MAKE) TYPE=drm ../obj/drm/m1rt.a
+#	$(MAKE) TYPE=release ../obj/release/m1rt.a
 	$(MAKE) TYPE=debug ../obj/debug/m1rt.a
 
 ../obj:
 	mkdir -p ../obj/drm
 	mkdir -p ../obj/release
 	mkdir -p ../obj/debug
-	mkdir -p ../epic/obj/debug
-	mkdir -p ../epic/obj/release
-	mkdir -p ../epic/lib/debug
-	mkdir -p ../epic/lib/release
 #
 # Clean both debug and release object dirs.
 #
 clean:
 	$(MAKE) TYPE=debug clean_target
-	$(MAKE) TYPE=release clean_target
-	$(MAKE) TYPE=drm clean_target
+#	$(MAKE) TYPE=release clean_target
+#	$(MAKE) TYPE=drm clean_target
 
 m1e_target:	$(M1E_TARGET)
 
 
-$(M1E_TARGET):	$(EPIC_LIB) $(RT_LIB) $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1E_OBJ)
+$(M1E_TARGET):	$(EPX_LIB) $(RT_LIB) $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1E_OBJ)
 	$(CXX)  -o $@ $(BASE_OBJ) $(STD_OBJ) $(M1VM_OBJ) $(M1E_OBJ) $(RT_LIB) $(LIBS) $(LDFLAGS)
 ifneq "$(UNAME)" "Darwin"
 ifneq "$(TYPE)" "debug"
@@ -354,8 +352,8 @@ $(OBJDIR)/%.o: %.cc
 $(OBJDIR)/%.o: %.c
 	$(CC) -c $(CXXFLAGS) -o $@ $<
 
+$(EPX_LIB):
+	(cd ../epx; make release debug)
+
 spotless: clean
 	rm -f *~ Makefile
-
-epic:
-	(cd ../epic/src; make debug opt WITH_X11=$(WITH_X11))

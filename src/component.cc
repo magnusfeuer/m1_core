@@ -160,26 +160,27 @@ int CLayerComponent::pixelType2PixelFormat(int aPixelType)
 {
 #ifdef USE_FFMPEG
     switch(aPixelType) {
-    case EPIXEL_TYPE_RGB:      return PIX_FMT_RGB24;
-    case EPIXEL_TYPE_BGR:      return PIX_FMT_BGR24;
-    case EPIXEL_TYPE_RGBA:     return PIX_FMT_RGBA;
-    case EPIXEL_TYPE_ARGB:     return PIX_FMT_ARGB;
-    case EPIXEL_TYPE_BGRA:     return PIX_FMT_BGRA;
-    case EPIXEL_TYPE_ABGR:     return PIX_FMT_ABGR;
-    case EPIXEL_TYPE_565_LE:
+    case EPX_FORMAT_RGB:      return PIX_FMT_RGB24;
+    case EPX_FORMAT_BGR:      return PIX_FMT_BGR24;
+    case EPX_FORMAT_RGBA:     return PIX_FMT_RGBA;
+    case EPX_FORMAT_ARGB:     return PIX_FMT_ARGB;
+    case EPX_FORMAT_BGRA:     return PIX_FMT_BGRA;
+    case EPX_FORMAT_ABGR:     return PIX_FMT_ABGR;
+    case EPX_FORMAT_565_LE:
 #if BYTE_ORDER == BIG_ENDIAN
 	return PIX_FMT_BGR565;
 #else
 	return PIX_FMT_RGB565;
 #endif
-    case EPIXEL_TYPE_565_BE:
+    case EPX_FORMAT_565_BE:
 #if BYTE_ORDER == BIG_ENDIAN
 	return PIX_FMT_RGB565;
 #else
 	return PIX_FMT_BGR565;
 #endif
-    case EPIXEL_TYPE_A1R5G5B5:
-    case EPIXEL_TYPE_X1R5G5B5:
+#warning "TONY FIXME: EPX_FORMAT_A1R5G5B5 and EPX_FORMAT_X1R5G5B5 not declared. Wiring this as little-endian version. Please validate"
+    case EPX_FORMAT_A1R5G5B5_LE:
+    case EPX_FORMAT_X1R5G5B5_LE:
 #if BYTE_ORDER == BIG_ENDIAN
 	return PIX_FMT_RGB555;
 #else
@@ -198,11 +199,11 @@ int CLayerComponent::pixelType2PixelFormat(int aPixelType)
 // if ScaleAlpha is true then alpha channel needs scaling 
 // even if the sws_scaler does not support it
 //
-void CLayerComponent::scaleImage(EPixmap* aSrcImage, EPixmap* aDstImage, bool aScaleAlpha)
+void CLayerComponent::scaleImage(epx_pixmap_t* aSrcImage, epx_pixmap_t* aDstImage, bool aScaleAlpha)
 {
 #ifdef USE_FFMPEG
-    int       srcFmt = pixelType2PixelFormat(aSrcImage->pixelType);
-    int       dstFmt = pixelType2PixelFormat(aDstImage->pixelType);
+    int       srcFmt = pixelType2PixelFormat(aSrcImage->pixel_format);
+    int       dstFmt = pixelType2PixelFormat(aDstImage->pixel_format);
     u_int8_t* srcData[4];
     int       srcLineSize[4];
     u_int8_t* dstData[4];
@@ -218,17 +219,17 @@ void CLayerComponent::scaleImage(EPixmap* aSrcImage, EPixmap* aDstImage, bool aS
 				       dstFmt,
 				       SWS_BICUBIC, NULL, NULL, NULL);
     srcData[0]     = aSrcImage->data;
-    srcLineSize[0] = aSrcImage->bytesPerRow;
+    srcLineSize[0] = aSrcImage->bytes_per_row;
 
     dstData[0]     = aDstImage->data;
-    dstLineSize[0] = aDstImage->bytesPerRow;
+    dstLineSize[0] = aDstImage->bytes_per_row;
 
     sws_scale(mSwsContext, srcData, srcLineSize, 0,
 	      aSrcImage->height, dstData, dstLineSize);
     
     if (aScaleAlpha) {
-	EPixmap*  srcAlphaImage;
-	EPixmap*  dstAlphaImage;
+	epx_pixmap_t*  srcAlphaImage;
+	epx_pixmap_t*  dstAlphaImage;
 	// If alpha scaling is needed then produce an alpha image
 	mSwsContext2 = sws_getCachedContext(mSwsContext2,
 					    aSrcImage->width,
@@ -239,34 +240,34 @@ void CLayerComponent::scaleImage(EPixmap* aSrcImage, EPixmap* aDstImage, bool aS
 					    PIX_FMT_GRAY8,
 					    SWS_BICUBIC, NULL, NULL, NULL);
 
-	if ((srcAlphaImage = EPixmapCreate(aSrcImage->width,
-					   aSrcImage->height,
-					   EPIXEL_TYPE_ALPHA)) == 0)
+	if ((srcAlphaImage = epx_pixmap_create(aSrcImage->width,
+					       aSrcImage->height,
+					       EPX_FORMAT_ALPHA)) == 0)
 	    return;
-	if ((dstAlphaImage = EPixmapCreate(aDstImage->width,
-					   aDstImage->height,
-					   EPIXEL_TYPE_ALPHA)) == 0) {
-	    EPixmapDestroy(srcAlphaImage);	    
+	if ((dstAlphaImage = epx_pixmap_create(aDstImage->width,
+					       aDstImage->height,
+					       EPX_FORMAT_ALPHA)) == 0) {
+	    epx_pixmap_destroy(srcAlphaImage);	    
 	    return;
 	}
 	// copy the alpha channel (treat it as PIX_FMT_GRAY8)
-	EPixmapCopy(aSrcImage, srcAlphaImage);
+	epx_pixmap_copy_to(aSrcImage, srcAlphaImage);
 	srcData[0]     = srcAlphaImage->data;
-	srcLineSize[0] = srcAlphaImage->bytesPerRow;
+	srcLineSize[0] = srcAlphaImage->bytes_per_row;
 	dstData[0]     = dstAlphaImage->data;
-	dstLineSize[0] = dstAlphaImage->bytesPerRow;
+	dstLineSize[0] = dstAlphaImage->bytes_per_row;
 
 	sws_scale(mSwsContext2, srcData, srcLineSize, 0,
 		  srcAlphaImage->height, dstData, dstLineSize);
 
 	// add the alpha channel to dstImage!
-	EPixmapCopyArea(dstAlphaImage, aDstImage,
-			0, 0, 0, 0,
-			dstAlphaImage->width,
-			dstAlphaImage->height,
-			EFLAG_SUM);
-	EPixmapDestroy(srcAlphaImage);
-	EPixmapDestroy(dstAlphaImage);
+	epx_pixmap_copy_area(dstAlphaImage, aDstImage,
+			     0, 0, 0, 0,
+			     dstAlphaImage->width,
+			     dstAlphaImage->height,
+			     EPX_FLAG_SUM);
+	epx_pixmap_destroy(srcAlphaImage);
+	epx_pixmap_destroy(dstAlphaImage);
     }
 #endif
 }
@@ -296,7 +297,7 @@ void CLayerComponent::post_execute(CExecutor* aExec)
 //
 // Init aContext to values of self. No clipping.
 //
-void CLayerComponent::initContext(CRedrawContext &aContext, EGc* aGc)
+void CLayerComponent::initContext(CRedrawContext &aContext, epx_gc_t* aGc)
 {
     float sv = scaleVertical();
     float sh = scaleHorizontal();
@@ -312,13 +313,13 @@ void CLayerComponent::initContext(CRedrawContext &aContext, EGc* aGc)
     aContext.mTransparency = transparency();
     aContext.mVscale  = sv;
     aContext.mHscale  = sh;
-    EGcSetFaderFloat(aGc, (1-aContext.mTransparency));
+    epx_gc_set_fader_float(aGc, (1-aContext.mTransparency));
 
-    ERectSet(&aContext.mClipRect, 
-	     int(aContext.lLeft),
-	     int(aContext.lTop),
-	     int(aContext.lWidth),
-	     int(aContext.lHeight));
+    epx_rect_set(&aContext.mClipRect, 
+		 int(aContext.lLeft),
+		 int(aContext.lTop),
+		 int(aContext.lWidth),
+		 int(aContext.lHeight));
 }
 
 //
@@ -328,13 +329,13 @@ void CLayerComponent::intersectClip(CRedrawContext &aContext)
 {
     if (clip()) {
 	// Note mLeftOffset and mTopOffset IS already updated at this point!
-	ERect_t rect;
-	ERectSet(&rect, 
-		 int(aContext.lLeft), 
-		 int(aContext.lTop),
-		 int(aContext.lWidth),
-		 int(aContext.lHeight));
-	ERectIntersect(&aContext.mClipRect, &rect, &aContext.mClipRect);
+	epx_rect_t rect;
+	epx_rect_set(&rect, 
+		     int(aContext.lLeft), 
+		     int(aContext.lTop),
+		     int(aContext.lWidth),
+		     int(aContext.lHeight));
+	epx_rect_intersect(&aContext.mClipRect, &rect, &aContext.mClipRect);
     }
 }
 
@@ -362,7 +363,7 @@ void CLayerComponent::modifyContext(CRedrawContext &aContext)
     //  1-(1-t1)*(1-t2) = 1-(1-t1-t2+t1*t2) = t1+t2-t1*t2
     // 
     aContext.mTransparency = t+aContext.mTransparency-t*aContext.mTransparency;
-    EGcSetFaderFloat(aContext.mGc, (1-aContext.mTransparency));
+    epx_gc_set_fader_float(aContext.mGc, (1-aContext.mTransparency));
     aContext.mHscale = sh;
     aContext.mVscale = sv;
 
@@ -370,7 +371,7 @@ void CLayerComponent::modifyContext(CRedrawContext &aContext)
 }
 
 // Draw a scaled image into aImage
-void CLayerComponent::redrawScaled(CRedrawContext* aContext, EPixmap* aImage)
+void CLayerComponent::redrawScaled(CRedrawContext* aContext, epx_pixmap_t* aImage)
 {
     //...
 }
@@ -401,7 +402,7 @@ void CLayerComponent::redrawChildren(CSystem* aSys, CRedrawContext *aContext)
 // Redraw layer background if needed
 void CLayerComponent::redrawLayer(CSystem* aSys, CRedrawContext *aContext)
 {
-    EGc* gc;
+    epx_gc_t* gc;
     u_int8_t fader;
 
     if (!aContext || !aContext->mPixmap)
@@ -410,7 +411,7 @@ void CLayerComponent::redrawLayer(CSystem* aSys, CRedrawContext *aContext)
     fader = gc->fader_value;
 
     if (mBackground.value()) {
-	EPixel_t color;
+	epx_pixel_t color;
 	float fWidth  = (aContext->lWidth <= 0.0)  ?
 	    aContext->cWidth : aContext->lWidth;
 	float fHeight = (aContext->lHeight <= 0.0) ? 
@@ -425,13 +426,15 @@ void CLayerComponent::redrawLayer(CSystem* aSys, CRedrawContext *aContext)
 
 	if (fader != ALPHA_FACTOR_1)
 	    color.a = (color.a * fader) >> 8;
-	EGcSetFillColor(gc, color);
-	EGcSetFillStyle(gc, EPIC_FILL_STYLE_BLEND);
-	EPixmapDrawRectangle(aContext->mPixmap, gc,
-			     int(aContext->lLeft),
-			     int(aContext->lTop),
-			     int(fWidth),
-			     int(fHeight));
+
+	epx_gc_set_fill_color(gc, color);
+
+	epx_gc_set_fill_style(gc, EPX_FILL_STYLE_BLEND);
+	epx_pixmap_draw_rectangle(aContext->mPixmap, gc,
+				  int(aContext->lLeft),
+				  int(aContext->lTop),
+				  int(fWidth),
+				  int(fHeight));
     }
 }
 
@@ -441,13 +444,13 @@ void CLayerComponent::redrawComponent(CSystem* aSys, CRedrawContext *aContext)
 {
     CRedrawContext ctx;
     u_int8_t fader;
-    EGc gc;
+    epx_gc_t gc;
     float hoffs   = 0.0;
     float voffs   = 0.0;
     float hscale  = 1.0;
     float vscale  = 1.0;
     bool  need_clip;
-    ERect_t save_clip;
+    epx_rect_t save_clip;
 
     // Setup layer scaling, transparency and clipping
     if (!aContext)
@@ -519,7 +522,7 @@ void CLayerComponent::redrawComponent(CSystem* aSys, CRedrawContext *aContext)
     need_clip = clip();
     if (need_clip) {
 	save_clip = ctx.mPixmap->clip;
-	EPixmapSetClip(ctx.mPixmap, &ctx.mClipRect);
+	epx_pixmap_set_clip(ctx.mPixmap, &ctx.mClipRect);
     }
 
     if (mChildrenFirst.value()) {
@@ -535,7 +538,7 @@ void CLayerComponent::redrawComponent(CSystem* aSys, CRedrawContext *aContext)
 
     // Restore clip if needed
     if (need_clip)
-	EPixmapSetClip(ctx.mPixmap, &save_clip);
+	epx_pixmap_set_clip(ctx.mPixmap, &save_clip);
 }
 
 

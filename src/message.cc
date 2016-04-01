@@ -6,7 +6,7 @@
 #include "m1.hh"
 #include "message.hh"
 
-#include "epic.h"
+#include "epx.h"
 #include <math.h> // for nearbyintf() rounding function. Link with -m.
 
 XOBJECT_TYPE_BOOTSTRAP(CMessage);

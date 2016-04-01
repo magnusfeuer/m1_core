@@ -25,8 +25,8 @@ CColorInterpolatorComponent::~CColorInterpolatorComponent(void)
 void CColorInterpolatorComponent::interpolate(CExecutor* aExec,float t, int i, int j)
 {
     CArray* keyValue;
-    EPixel_t c0;
-    EPixel_t c1;
+    epx_pixel_t c0;
+    epx_pixel_t c1;
 
     
     keyValue = at(XINDEX(CColorInterpolatorComponent,keyValue)).arr;

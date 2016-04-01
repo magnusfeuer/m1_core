@@ -153,7 +153,7 @@ int main(int argc, char** argv)
     int in = 0;
     int c;
     int i;
-    int simd_mode = EPIC_SIMD_AUTO;
+    int simd_mode = EPX_SIMD_AUTO;
     char* engine_id = M1_DEFAULT_ENGINE;
 #if defined(M1_DRM)
     bool  requireEncryption = true;
@@ -248,11 +248,11 @@ int main(int argc, char** argv)
 	    if (optarg != NULL) {
 		while((c=*optarg++)) {
 		    switch(c) {
-		    case 'A': simd_mode = EPIC_SIMD_AUTO; break;
-		    case 'e': simd_mode = EPIC_SIMD_EMU; break;
-		    case 'm': simd_mode |= EPIC_SIMD_MMX; break;
-		    case 's': simd_mode |= EPIC_SIMD_SSE2; break;
-		    case 'a': simd_mode |= EPIC_SIMD_ALTIVEC; break;
+		    case 'A': simd_mode = EPX_SIMD_AUTO; break;
+		    case 'e': simd_mode = EPX_SIMD_EMU; break;
+		    case 'm': simd_mode |= EPX_SIMD_MMX; break;
+		    case 's': simd_mode |= EPX_SIMD_SSE2; break;
+		    case 'a': simd_mode |= EPX_SIMD_ALTIVEC; break;
 		    default: break;
 		    }
 		}
@@ -288,8 +288,8 @@ int main(int argc, char** argv)
     crypto_init(engine_id);
 
     m1_init(lib_path);
-    epic_debug(EDBG_INFO);
-    epic_init(simd_mode);
+    epx_set_debug(DLOG_INFO);
+    epx_init(simd_mode);
 
     m1_fonts().load();               // Load all fonts
     m1_system().executor()->reset(); // fix global scope

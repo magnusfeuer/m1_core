@@ -1002,7 +1002,7 @@ protected:
     CEvent*       mUNext;        // Next in mOwner's updated list
 private:
     CEvent& operator= (const CEvent& rhs) {
-	m1BreakHere(__FILE__, __LINE__, "over write of event variable ignored");
+	m1BreakHere(__FILE__, __LINE__, (char*) "over write of event variable ignored");
 	return *this;
     }
 
@@ -2577,7 +2577,7 @@ public:
 
 // A Field declaration that goes with new index macro
 #define XFIELD(CID, Visibility, Name, Type, Doc)			\
-    CField((Visibility),#Name,(Type),(Doc),nil,&mFieldIndex[CID##_##Name])
+    CField((Visibility), #Name,(Type),(Doc),nil,&mFieldIndex[CID##_##Name])
 
 #define XFIELDC(CID, Visibility, Name, Type, Doc, Const)		\
     CField((Visibility),#Name,(Type),(Doc),(Const),&mFieldIndex[CID##_##Name])

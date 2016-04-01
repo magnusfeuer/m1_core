@@ -256,22 +256,22 @@ display_old:
 
 	switch(mPlotType.value()) {
 	case PLOT_DOT:
-	    EPixmapDrawPoint(aContext->mPixmap, aContext->mGc, x, y);
+	    epx_pixmap_draw_point(aContext->mPixmap, aContext->mGc, x, y);
 	    break;
 	case PLOT_RECTANGLE:
 	case PLOT_LINE:
 	case PLOT_SPIKE:
 	    if (isPeak[i]) {
-		EPixel_t save  = aContext->mGc->foreground_color;
+		epx_pixel_t save  = aContext->mGc->foreground_color;
 		u_int8_t alpha = save.a;
 		
 		aContext->mGc->foreground_color.px = ~save.px;
 		aContext->mGc->foreground_color.a  = alpha;
-		EPixmapDrawLine(aContext->mPixmap, aContext->mGc, x, y0, x, y);
+		epx_pixmap_draw_line(aContext->mPixmap, aContext->mGc, x, y0, x, y);
 		aContext->mGc->foreground_color = save;
 	    }
 	    else
-		EPixmapDrawLine(aContext->mPixmap, aContext->mGc, x, y0, x, y);
+		epx_pixmap_draw_line(aContext->mPixmap, aContext->mGc, x, y0, x, y);
 	    break;
 	}
     }
@@ -322,24 +322,24 @@ void CPlotComponent::draw_samples(CRedrawContext *aContext,
 	
 	switch(mPlotType.value()) {
 	case PLOT_DOT:
-	    EPixmapDrawPoint(aContext->mPixmap, aContext->mGc, x, y);
+	    epx_pixmap_draw_point(aContext->mPixmap, aContext->mGc, x, y);
 	    break;
 	case PLOT_SPIKE:
-	    EPixmapDrawLine(aContext->mPixmap, aContext->mGc, x, y0, x, y); 
+	    epx_pixmap_draw_line(aContext->mPixmap, aContext->mGc, x, y0, x, y); 
 	    break;
 	case PLOT_LINE:
 	    if (!first)
-		EPixmapDrawLine(aContext->mPixmap, aContext->mGc, x, y, x1, y1);
+		epx_pixmap_draw_line(aContext->mPixmap, aContext->mGc, x, y, x1, y1);
 	    break;
 	case PLOT_RECTANGLE:
 	    if (!first) {
 		if (y > y0) {
-		    EPixmapDrawRectangle(aContext->mPixmap, aContext->mGc,
-					 x, y0, (x1-x), (y-y0));
+		    epx_pixmap_draw_rectangle(aContext->mPixmap, aContext->mGc,
+					      x, y0, (x1-x), (y-y0));
 		}
 		else if (y < y0) {
-		    EPixmapDrawRectangle(aContext->mPixmap, aContext->mGc,
-					 x, y, (x1-x), (y0-y));
+		    epx_pixmap_draw_rectangle(aContext->mPixmap, aContext->mGc,
+					      x, y, (x1-x), (y0-y));
 		}
 	    }
 	    break;
@@ -359,11 +359,11 @@ void CPlotComponent::draw_samples(CRedrawContext *aContext,
 
 void CPlotComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
 {
-    EGc* gc;
+    epx_gc_t* gc;
     u_int8_t         fader;
     CSamplerBase*    samples;
-    EPixel_t         color;
-    EPixel_t         bcolor;
+    epx_pixel_t         color;
+    epx_pixel_t         bcolor;
 
     if (!aContext || !aContext->mPixmap) {
 	WARNFMT("CPlotComponent::redraw(): No context or pixmap provided.");
@@ -379,9 +379,9 @@ void CPlotComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
     gc = aContext->mGc;
     fader = gc->fader_value;
 
-    EGcSetFillStyle(gc, EPIC_FILL_STYLE_BLEND|EPIC_FILL_STYLE_AALIAS);
-    EGcSetBorderWidth(gc, mBorderWidth.value());
-    EGcSetBorderStyle(gc, EPIC_BORDER_STYLE_AALIAS);
+    epx_gc_set_fill_style(gc, EPX_FILL_STYLE_BLEND|EPX_FILL_STYLE_AALIAS);
+    epx_gc_set_border_width(gc, mBorderWidth.value());
+    epx_gc_set_border_style(gc, EPX_BORDER_STYLE_AALIAS);
 
     color.px = mColor.value();
     color.a  = 255; // FIXME
@@ -393,9 +393,9 @@ void CPlotComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
 	color.a = (color.a * fader) >> 8;
 	bcolor.a   = (bcolor.a * fader) >> 8;
     }
-    EGcSetFillColor(gc,  color);
-    EGcSetForegroundColor(gc,  color);
-    EGcSetBorderColor(gc, bcolor);
+    epx_gc_set_fill_color(gc,  color);
+    epx_gc_set_foreground_color(gc,  color);
+    epx_gc_set_border_color(gc, bcolor);
     
     if (mViewType.value() == VIEW_SAMPLES)
 	draw_samples(aContext, samples);

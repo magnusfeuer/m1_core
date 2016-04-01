@@ -5,7 +5,7 @@
 //
 
 #include <math.h> // for nearbyintf() rounding function. Link with -m.
-#include "epic.h"
+#include "epx.h"
 
 #include "m1.hh"
 #include "format_component.hh"
@@ -45,8 +45,8 @@ CFormatComponent::CFormatComponent(CExecutor* aExec,CBaseType *aType):
 {
     mFontName.putValue(aExec, "Helvetica");
     mFontSize.putValue(aExec, 12);
-    mFontWeight.putValue(aExec, EFONT_WEIGHT_BOLD);
-    mFontSlant.putValue(aExec, EFONT_SLANT_ROMAN);
+    mFontWeight.putValue(aExec, EPX_FONT_WEIGHT_BOLD);
+    mFontSlant.putValue(aExec, EPX_FONT_SLANT_ROMAN);
     mFormat.putValue(aExec, "");
     mGlyphDeltaX.putValue(aExec,  0);
     mGlyphDeltaY.putValue(aExec,  0);
@@ -128,28 +128,28 @@ void CFormatComponent::calcText(CExecutor* aExec)
 	valueFormat(buf, sizeof(buf));
 
 	if ((style = mStyleLink.style()) != NULL) {
-	    EGc* gc;
+	    epx_gc_t* gc;
 	    CFont* fnt;
 	    
-	    gc = style->epicContext();
+	    gc = style->epxContext();
 	    if ((fnt = style->font()) != NULL) {
 		fnt->use(aExec->cycleTime());
-		EFontDrawString(gc, NULL, &x, &y, buf);
-		height = fnt->epicFont()->font_info.ascent + 
-		    fnt->epicFont()->font_info.descent;
+		epx_font_draw_string(gc, NULL, &x, &y, buf, strlen(buf));
+		height = fnt->epxFont()->font_info.ascent + 
+		    fnt->epxFont()->font_info.descent;
 	    }
 	}
 	else if (mFont) {
-	    EGc gc;
-	    EFont* efnt;
+	    epx_gc_t gc;
+	    epx_font_t* efnt;
 	
 	    mFont->use(aExec->cycleTime());
-	    if ((efnt = mFont->epicFont()) != NULL) {
+	    if ((efnt = mFont->epxFont()) != NULL) {
 		gc.font = efnt;
-		EGcSetGlyphDelta(&gc, mGlyphDeltaX.value(), mGlyphDeltaY.value());
-		EGcSetGlyphDotKern(&gc, mGlyphDotKerning.value());
-		EGcSetGlyphWidth(&gc, mGlyphFixedWidth.value());
-		EFontDrawString(&gc, NULL, &x, &y, buf);
+		epx_gc_set_glyph_delta(&gc, mGlyphDeltaX.value(), mGlyphDeltaY.value());
+		epx_gc_set_glyph_dot_kern(&gc, mGlyphDotKerning.value());
+		epx_gc_set_glyph_fixed_width(&gc, mGlyphFixedWidth.value());
+		epx_font_draw_string(&gc, NULL, &x, &y, buf, strlen(buf));
 		height = efnt->font_info.ascent + efnt->font_info.descent;
 	    }
 	}
@@ -179,7 +179,7 @@ void CFormatComponent::post_execute(CExecutor* aExec)
 
 void CFormatComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
 {
-    EGc*  gc;
+    epx_gc_t*  gc;
     u_int8_t fader;
 
     if (!aContext || !aContext->mPixmap) {
@@ -198,43 +198,43 @@ void CFormatComponent::redraw(CSystem* aSys, CRedrawContext *aContext)
 	if ((style = mStyleLink.style()) != NULL) {
 	    CFont* fnt;
 
-	    gc = style->epicContext();
+	    gc = style->epxContext();
 	    if ((fnt = style->font()) != NULL) {
-		EPixel_t save_color;
+		epx_pixel_t save_color;
 
 		fnt->use(aSys->cycleTime());
 		// Since we are modifying color alpha we need to save/restore
-		// unil we fixed EFontDrawString
+		// unil we fixed epx_font_tDrawString
 		save_color = gc->foreground_color;
 		if (fader != ALPHA_FACTOR_1)
 		    gc->foreground_color.a = (gc->foreground_color.a * fader) >> 8;
 		x = int(aContext->lLeft);
-		y = int(aContext->lTop) + fnt->epicFont()->font_info.ascent;
-		EFontDrawString(gc, aContext->mPixmap, &x, &y, buf);
+		y = int(aContext->lTop) + fnt->epxFont()->font_info.ascent;
+		epx_font_draw_string(gc, aContext->mPixmap, &x, &y, buf, strlen(buf));
 		gc->foreground_color = save_color;
 	    }
 	}
 	else if (mFont) {
-	    EFont* savefnt = gc->font;
-	    EPixel_t color;
+	    epx_font_t* savefnt = gc->font;
+	    epx_pixel_t color;
 
-	    gc->font = mFont->epicFont();
+	    gc->font = mFont->epxFont();
 	    color.px = mFontColor.value();
 	    // color.a  = 0;
 
 	    if (fader != ALPHA_FACTOR_1)
 		color.a = (color.a * fader) >> 8;
-	    EGcSetForegroundColor(gc, color);
+	    epx_gc_set_foreground_color(gc, color);
 
 	    mFont->use(aSys->cycleTime());
 	
-	    EGcSetGlyphDelta(gc, mGlyphDeltaX.value(), mGlyphDeltaY.value());
-	    EGcSetGlyphDotKern(gc, mGlyphDotKerning.value());
-	    EGcSetGlyphWidth(gc, mGlyphFixedWidth.value());
+	    epx_gc_set_glyph_delta(gc, mGlyphDeltaX.value(), mGlyphDeltaY.value());
+	    epx_gc_set_glyph_dot_kern(gc, mGlyphDotKerning.value());
+	    epx_gc_set_glyph_fixed_width(gc, mGlyphFixedWidth.value());
 	    
 	    x = int(aContext->lLeft);
-	    y = int(aContext->lTop) + mFont->epicFont()->font_info.ascent;
-	    EFontDrawString(gc, aContext->mPixmap, &x, &y, buf);
+	    y = int(aContext->lTop) + mFont->epxFont()->font_info.ascent;
+	    epx_font_draw_string(gc, aContext->mPixmap, &x, &y, buf, strlen(buf));
 	    gc->font = savefnt;
 	}
     }

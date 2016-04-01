@@ -20,7 +20,7 @@ CFontManager& m1_fonts()
 
 
 bool CFont::match(int aResolution, string aName,int aSize,
-		  EFontWeight aWeight,EFontSlant aSlant)
+		  epx_font_weight_t aWeight, epx_font_slant_t aSlant)
 {
     if ((aName != "") && (strcmp(aName.c_str(), mFont->family_name) != 0))
 	return false;
@@ -66,10 +66,10 @@ void CFontManager::loadFonts(string aPath)
 	char* fname = dp->d_name;
 	char* sfx = strrchr(fname, '.');
 	if (sfx && strcmp(sfx, ".efnt") == 0) {
-	    EFont* font;
+	    epx_font_t* font;
 	    string filename = aPath + "/" + string(fname);
 
-	    if ((font = EFontOpen((char*)filename.c_str())) != NULL) {
+	    if ((font = epx_font_open((char*)filename.c_str())) != NULL) {
 		CFont* cfnt = new CFont(font);
 		mFontList.push_back(cfnt);
 		m1Retain(CFont, cfnt);
@@ -111,7 +111,7 @@ void CFontManager::clear(void)
 }
 
 CFont* CFontManager::match(int aResolution, string aName,int aSize,
-			 EFontWeight aWeight,EFontSlant aSlant) 
+			 epx_font_weight_t aWeight, epx_font_slant_t aSlant) 
 {
     CFontList::iterator iter;
     for (iter = mFontList.begin(); iter != mFontList.end(); iter++) {
