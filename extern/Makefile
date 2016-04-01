@@ -33,6 +33,7 @@ bison-2.3/README:
 ffmpeg/Makefile: ffmpeg/INSTALL
 	@echo "--- extern: Configuring ffmpeg."
 	(cd ffmpeg; ./configure --enable-swscaler --enable-gpl --prefix=$(PWD); make depend);
+	-(cd ffmpeg; make depend);
 #	(cd ffmpeg; ./configure  --prefix=$(PWD));
 
 ffmpeg/INSTALL:
