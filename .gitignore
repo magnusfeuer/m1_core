@@ -27,6 +27,8 @@
 *.out
 *.app
 
+epx
+include/config.h
 autom4te.cache
 config.log
 config.status
