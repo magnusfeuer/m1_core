@@ -58,7 +58,10 @@ debug_dpf:
 	@(rev=`svn info | grep Revision | cut -d' ' -f 2`; cd ptmp; $(BINDIR)/fs2db -h$(DB_HOST) -u$(DB_USER) -p$(DB_PASSWORD) -d$(DB_DATABASE) -s$$rev -Dm1@magden-auto.com/os/1.-1.-1 -L -im1@magden-auto.com/m1dbg_bin/$(VERSION) -as . )
 	@rm -rf ptmp
 
-release: src/Makefile
+release: src/Makefile $(EPX_CLONE_TRIGGER)
+	(cd extern; epx)
+	(cp epx/priv/bin/ddscomp ../bin)
+	(cp epx/priv/bin/efnttool ../bin)
 	(cd extern; make)
 	(cd src; make rtlib)
 #	(rm -f epic/obj/release/epic_backend.o; cd epic/src; make release)
@@ -66,13 +69,19 @@ release: src/Makefile
 	(cd tools; make)
 
 
-drm: src/Makefile
+drm: src/Makefile $(EPX_CLONE_TRIGGER)
+	(cd extern; epx)
+	(cp epx/priv/bin/ddscomp ../bin)
+	(cp epx/priv/bin/efnttool ../bin)
 	(cd extern; make)
 #	(rm -f epic/obj/release/epic_backend.o; cd epic/src; make release)
 	(cd src; make drm)
 	(cd tools; make)
 
-release_with_x11:
+release_with_x11: src/Makefile $(EPX_CLONE_TRIGGER)
+	(cd epx; make)
+	(cp epx/priv/bin/ddscomp ../bin)
+	(cp epx/priv/bin/efnttool ../bin)
 	(cd extern; make)
 	(cd src; make rtlib)
 #	(rm -f epic/obj/release/epic_backend.o; cd epic/src; make release WITH_X11=1)
@@ -80,6 +89,9 @@ release_with_x11:
 	(cd tools; make)
 
 debug:  src/Makefile $(EPX_CLONE_TRIGGER)
+	(cd epx; make)
+	(cp epx/priv/bin/ddscomp ../bin)
+	(cp epx/priv/bin/efnttool ../bin)
 	(cd extern; make)
 	(cd src; make rtlib)
 #	(rm -f epic/obj/debug/epic_backend.o; cd epic/src; make debug WITH_X11=1)
@@ -87,6 +99,9 @@ debug:  src/Makefile $(EPX_CLONE_TRIGGER)
 	(cd tools; make)
 
 debug_no_x11: src/Makefile $(EPX_CLONE_TRIGGER)
+	(cd epx; make)
+	(cp epx/priv/bin/ddscomp ../bin)
+	(cp epx/priv/bin/efnttool ../bin)
 	(cd extern; make)
 	(cd src; make rtlib)
 #	(rm -f epic/obj/debug/epic_backend.o; cd epic/src; make debug)
