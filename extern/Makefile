@@ -18,7 +18,7 @@ bin/bison: bison-2.3/Makefile
 	rm -f ./share/bison/lalr1pp.cc
 	ln ../src/lalr1pp.cc ./share/bison/
 
-lib/libavcodec.a: ffmpeg/Makefile
+lib/libavcodec.a: ffmpeg/INSTALL
 	@echo "--- extern: Building ffmpeg."
 	(cd ffmpeg; make; make install)
 
@@ -30,15 +30,13 @@ bison-2.3/README:
 	@echo "--- extern: Unpacking bison 2.3."
 	tar xzf  bison-2.3.tar.gz
 
-ffmpeg/Makefile: ffmpeg/INSTALL
-	@echo "--- extern: Configuring ffmpeg."
+ffmpeg/INSTALL:
+	@echo "--- extern: Unpacking and configuring ffmpeg from local 2006-12-01 snapshot."
+	tar xzf ffmpeg_20070413.tgz
 	(cd ffmpeg; ./configure --enable-swscaler --enable-gpl --prefix=$(PWD); make depend);
 	-(cd ffmpeg; make depend);
 #	(cd ffmpeg; ./configure  --prefix=$(PWD));
 
-ffmpeg/INSTALL:
-	@echo "--- extern: Unpacking ffmpeg from local 2006-12-01 snapshot."
-	tar xzf ffmpeg_20070413.tgz
 
 lib/libssl.a: openssl-0.9.8e/Makefile.bak
 	@echo "--- extern: Building OpenSSL."

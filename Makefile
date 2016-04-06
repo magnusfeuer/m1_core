@@ -59,7 +59,7 @@ debug_dpf:
 	@rm -rf ptmp
 
 release: src/Makefile $(EPX_CLONE_TRIGGER)
-	(cd extern; epx)
+	(cd epx; make)
 	(cp epx/priv/bin/ddscomp ../bin)
 	(cp epx/priv/bin/efnttool ../bin)
 	(cd extern; make)
